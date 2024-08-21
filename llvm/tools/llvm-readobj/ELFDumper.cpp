@@ -1724,6 +1724,12 @@ const EnumEntry<unsigned> ElfHeaderLoongArchFlags[] = {
   ENUM_ENT(EF_LOONGARCH_OBJABI_V1, "OBJ-v1"),
 };
 
+static const EnumEntry<unsigned> ElfHeaderOpenRiscFlags[] = {
+  LLVM_READOBJ_ENUM_ENT(ELF, EF_OPENRISC_MACH_NONE),
+  LLVM_READOBJ_ENUM_ENT(ELF, EF_OPENRISC_XT_INSN),
+  LLVM_READOBJ_ENUM_ENT(ELF, EF_OPENRISC_XT_LIT)
+};
+
 static const EnumEntry<unsigned> ElfHeaderXtensaFlags[] = {
   LLVM_READOBJ_ENUM_ENT(ELF, EF_XTENSA_MACH_NONE),
   LLVM_READOBJ_ENUM_ENT(ELF, EF_XTENSA_XT_INSN),
@@ -3648,6 +3654,9 @@ template <class ELFT> void GNUELFDumper<ELFT>::printFileHeaders() {
   else if (e.e_machine == EM_XTENSA)
     ElfFlags = printFlags(e.e_flags, ArrayRef(ElfHeaderXtensaFlags),
                           unsigned(ELF::EF_XTENSA_MACH));
+  else if (e.e_machine == EM_OPENRISC)
+    ElfFlags = printFlags(e.e_flags, ArrayRef(ElfHeaderOpenRiscFlags),
+                          unsigned(ELF::EF_OPENRISC_MACH));
   else if (e.e_machine == EM_CUDA)
     ElfFlags = printFlags(e.e_flags, ArrayRef(ElfHeaderNVPTXFlags),
                           unsigned(ELF::EF_CUDA_SM));
@@ -7149,6 +7158,9 @@ template <class ELFT> void LLVMELFDumper<ELFT>::printFileHeaders() {
     else if (E.e_machine == EM_XTENSA)
       W.printFlags("Flags", E.e_flags, ArrayRef(ElfHeaderXtensaFlags),
                    unsigned(ELF::EF_XTENSA_MACH));
+    else if (E.e_machine == EM_OPENRISC)
+      W.printFlags("Flags", E.e_flags, ArrayRef(ElfHeaderOpenRiscFlags),
+                   unsigned(ELF::EF_OPENRISC_MACH));
     else if (E.e_machine == EM_CUDA)
       W.printFlags("Flags", E.e_flags, ArrayRef(ElfHeaderNVPTXFlags),
                    unsigned(ELF::EF_CUDA_SM));

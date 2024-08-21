@@ -129,6 +129,9 @@
 /* Define if the Xtensa target is built in */
 #cmakedefine01 LLVM_HAS_XTENSA_TARGET
 
+/* Define if the OpenRisc target is built in */
+#cmakedefine01 LLVM_HAS_OPENRISC_TARGET
+
 /* Define if this is Unixish platform */
 #cmakedefine LLVM_ON_UNIX ${LLVM_ON_UNIX}
 

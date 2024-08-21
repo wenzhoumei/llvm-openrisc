@@ -181,6 +181,13 @@ StringRef llvm::object::getELFRelocationTypeName(uint32_t Machine,
       break;
     }
     break;
+  case ELF::EM_OPENRISC:
+    switch (Type) {
+#include "llvm/BinaryFormat/ELFRelocs/OpenRisc.def"
+    default:
+      break;
+    }
+    break;
   default:
     break;
   }

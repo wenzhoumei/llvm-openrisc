@@ -284,6 +284,13 @@ TEST(ELFObjectFileTest, MachineTestForXtensa) {
     checkFormatAndArch(Data, Formats[Idx], Triple::xtensa);
 }
 
+TEST(ELFObjectFileTest, MachineTestForOpenRisc) {
+  std::array<StringRef, 4> Formats = {"elf32-openrisc", "elf32-openrisc",
+                                      "elf64-unknown", "elf64-unknown"};
+  for (auto [Idx, Data] : enumerate(generateData(ELF::OPENRISC)))
+    checkFormatAndArch(Data, Formats[Idx], Triple::openrisc);
+}
+
 TEST(ELFObjectFileTest, CheckOSAndTriple) {
   std::tuple<uint16_t, uint8_t, StringRef> Formats[] = {
       {ELF::EM_AMDGPU, ELF::ELFOSABI_AMDGPU_HSA, "amdgcn-amd-amdhsa"},

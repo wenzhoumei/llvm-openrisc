@@ -566,6 +566,11 @@ void ScalarBitSetTraits<ELFYAML::ELF_EF>::bitset(IO &IO,
     BCaseMask(EF_XTENSA_MACH_NONE, EF_XTENSA_MACH);
     BCase(EF_XTENSA_XT_LIT);
     break;
+  case ELF::EM_OPENRISC:
+    BCase(EF_OPENRISC_XT_INSN);
+    BCaseMask(EF_OPENRISC_MACH_NONE, EF_OPENRISC_MACH);
+    BCase(EF_OPENRISC_XT_LIT);
+    break;
   case ELF::EM_AMDGPU:
     BCaseMask(EF_AMDGPU_MACH_NONE, EF_AMDGPU_MACH);
     BCaseMask(EF_AMDGPU_MACH_R600_R600, EF_AMDGPU_MACH);
@@ -954,6 +959,9 @@ void ScalarEnumerationTraits<ELFYAML::ELF_REL>::enumeration(
     break;
   case ELF::EM_XTENSA:
 #include "llvm/BinaryFormat/ELFRelocs/Xtensa.def"
+    break;
+  case ELF::EM_OPENRISC:
+#include "llvm/BinaryFormat/ELFRelocs/OpenRisc.def"
     break;
   default:
     // Nothing to do.
