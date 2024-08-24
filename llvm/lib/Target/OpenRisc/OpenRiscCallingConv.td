@@ -23,7 +23,6 @@ def CC : CallingConv<[
 
 def RetCC : CallingConv<[
   CCIfType<[i32], CCAssignToReg<[R11]>>,
-  //CCIfType<[i64, f64], CCAssignToReg<[R11, R12]>>
 ]>;
 
 def CSR : CalleeSavedRegs<(add R14,R16,R18,R20,R22,R24,R26,R28,R30)>;
