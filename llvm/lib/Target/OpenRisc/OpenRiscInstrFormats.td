@@ -155,7 +155,7 @@ class F6_Inst<bits<6> opcode,
 //===----------------------------------------------------------------------===//
 // Format 7
 //===----------------------------------------------------------------------===//
-// Includes: l.sb, l.sd, l.sh, sw
+// Includes: l.sb, l.sh, sw
 class F7_Inst<bits<6> opcode,
               dag outs, dag ins, string asmStr, list<dag> pattern,
               InstrItinClass itin = NoItinerary> :

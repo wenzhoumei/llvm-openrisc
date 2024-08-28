@@ -140,6 +140,8 @@ def GPR_Class : RegisterClass<"OpenRisc", [i32], 32, (add
   R26, R28, R30, R15, R17, R19, R21, R23, 
   R25, R27, R29, R31, R1, R2, R0)>;
 
+def SR_Class : RegisterClass<"OpenRisc", [i32], 32, (add SR)>;
+
 // Register class for EPCR registers
 def EPCR_Class : RegisterClass<"OpenRisc", [i32], 32, 
   (add (sequence "EPCR%u", 0, 15))>;
