@@ -41,8 +41,4 @@ def mem32  : mem<offset8m32> {
   let DecoderMethod = "decodeMem32Operand";
 }
 
-def mem32n : mem<offset4m32> {
-  let DecoderMethod = "decodeMem32nOperand";
-}
-
 def addrimm : ComplexPattern<iPTR, 2, "selectMemRegAddr", [frameindex]>; /// https://vscode.dev/github/wenzhoumei/llvm-openrisc/blob/main/llvm/lib/Target/Mips/MipsInstrInfo.td#L1305
