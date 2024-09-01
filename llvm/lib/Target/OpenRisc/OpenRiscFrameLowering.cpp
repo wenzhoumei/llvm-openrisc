@@ -264,7 +264,7 @@ void OpenRiscFrameLowering::processFunctionBeforeFrameFinalized(
   if (isInt<12>(MaxSPOffset))
     return;
 
-  const TargetRegisterClass &RC = OpenRisc::ARRegClass;
+  const TargetRegisterClass &RC = OpenRisc::GPRRegClass;
   unsigned Size = TRI->getSpillSize(RC);
   Align Alignment = TRI->getSpillAlign(RC);
   int FI = MF.getFrameInfo().CreateStackObject(Size, Alignment, false);

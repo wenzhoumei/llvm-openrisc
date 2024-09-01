@@ -81,7 +81,7 @@ void OpenRiscInstrInfo::adjustStackPtr(unsigned SP, int64_t Amount,
     return;
 
   MachineRegisterInfo &RegInfo = MBB.getParent()->getRegInfo();
-  const TargetRegisterClass *RC = &OpenRisc::ARRegClass;
+  const TargetRegisterClass *RC = &OpenRisc::GPRRegClass;
 
   // create virtual reg to store immediate
   unsigned Reg = RegInfo.createVirtualRegister(RC);
@@ -107,7 +107,7 @@ void OpenRiscInstrInfo::copyPhysReg(MachineBasicBlock &MBB,
                                   MCRegister SrcReg, bool KillSrc) const {
   // The MOV instruction is not present in core ISA,
   // so use OR instruction.
-  if (OpenRisc::ARRegClass.contains(DestReg, SrcReg))
+  if (OpenRisc::GPRRegClass.contains(DestReg, SrcReg))
     BuildMI(MBB, MBBI, DL, get(OpenRisc::OR), DestReg)
         .addReg(SrcReg, getKillRegState(KillSrc))
         .addReg(SrcReg, getKillRegState(KillSrc));
@@ -143,7 +143,7 @@ void OpenRiscInstrInfo::getLoadStoreOpcodes(const TargetRegisterClass *RC,
                                           unsigned &LoadOpcode,
                                           unsigned &StoreOpcode,
                                           int64_t offset) const {
-  assert((RC == &OpenRisc::ARRegClass) &&
+  assert((RC == &OpenRisc::GPRRegClass) &&
          "Unsupported regclass to load or store");
 
   LoadOpcode = OpenRisc::L32I;
@@ -155,7 +155,7 @@ void OpenRiscInstrInfo::loadImmediate(MachineBasicBlock &MBB,
                                     unsigned *Reg, int64_t Value) const {
   DebugLoc DL = MBBI != MBB.end() ? MBBI->getDebugLoc() : DebugLoc();
   MachineRegisterInfo &RegInfo = MBB.getParent()->getRegInfo();
-  const TargetRegisterClass *RC = &OpenRisc::ARRegClass;
+  const TargetRegisterClass *RC = &OpenRisc::GPRRegClass;
 
   // create virtual reg to store immediate
   *Reg = RegInfo.createVirtualRegister(RC);
