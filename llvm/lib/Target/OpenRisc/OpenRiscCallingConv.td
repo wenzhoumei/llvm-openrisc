@@ -8,9 +8,7 @@
 //
 //===-------------------------------------------------------------------------===//
 
-// TODO: Handle varargs, floats, 
-
-def CC : CallingConv<[
+def CC_OpenRisc : CallingConv<[
   // Promote small types to i32.
   CCIfType<[i1, i8, i16], CCPromoteToType<i32>>,
   
@@ -21,7 +19,7 @@ def CC : CallingConv<[
   CCAssignToStack<4, 4>
 ]>;
 
-def RetCC : CallingConv<[
+def RetCC_OpenRisc : CallingConv<[
   CCIfType<[i32], CCAssignToReg<[R11]>>,
 ]>;
 

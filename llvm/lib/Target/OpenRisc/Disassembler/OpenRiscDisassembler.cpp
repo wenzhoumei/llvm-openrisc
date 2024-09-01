@@ -38,10 +38,6 @@ public:
   OpenRiscDisassembler(const MCSubtargetInfo &STI, MCContext &Ctx, bool isLE)
       : MCDisassembler(STI, Ctx), IsLittleEndian(isLE) {}
 
-  bool hasDensity() const {
-    return STI.hasFeature(OpenRisc::FeatureDensity);
-  }
-
   DecodeStatus getInstruction(MCInst &Instr, uint64_t &Size,
                               ArrayRef<uint8_t> Bytes, uint64_t Address,
                               raw_ostream &CStream) const override;

@@ -40,78 +40,27 @@ static bool isLongCall(const char *str) {
 }
 
 OpenRiscTargetLowering::OpenRiscTargetLowering(const TargetMachine &TM,
-                                           const OpenRiscSubtarget &STI)
+                                               const OpenRiscSubtarget &STI)
     : TargetLowering(TM), Subtarget(STI) {
   MVT PtrVT = MVT::i32;
-  // Set up the register classes.
-  addRegisterClass(MVT::i32, &OpenRisc::ARRegClass);
-
-  // Set up special registers.
-  setStackPointerRegisterToSaveRestore(OpenRisc::SP);
+  
+  // Set up the registers
+  addRegisterClass(MVT::i32, &OpenRisc::GPRRegClass);
+  setStackPointerRegisterToSaveRestore(OpenRisc::R1);
 
   setSchedulingPreference(Sched::RegPressure);
-
   setMinFunctionAlignment(Align(4));
-
-  setOperationAction(ISD::Constant, MVT::i32, Custom);
-  setOperationAction(ISD::Constant, MVT::i64, Expand);
 
   setBooleanContents(ZeroOrOneBooleanContent);
 
-  setOperationAction(ISD::SIGN_EXTEND_INREG, MVT::i1, Expand);
-  setOperationAction(ISD::SIGN_EXTEND_INREG, MVT::i8, Expand);
-  setOperationAction(ISD::SIGN_EXTEND_INREG, MVT::i16, Expand);
+  // Specify [Legal|Expand|Promote|Custom] for each SDNode
+  setOperationAction(ISD::Constant, MVT::i32, Legal);
+  setOperationAction(ISD::Constant, MVT::i64, Expand);
 
-  setOperationAction(ISD::BITCAST, MVT::i32, Expand);
-  setOperationAction(ISD::BITCAST, MVT::f32, Expand);
-  setOperationAction(ISD::UINT_TO_FP, MVT::i32, Expand);
-  setOperationAction(ISD::SINT_TO_FP, MVT::i32, Expand);
-  setOperationAction(ISD::FP_TO_UINT, MVT::i32, Expand);
-  setOperationAction(ISD::FP_TO_SINT, MVT::i32, Expand);
-
-  // No sign extend instructions for i1
-  for (MVT VT : MVT::integer_valuetypes()) {
-    setLoadExtAction(ISD::SEXTLOAD, VT, MVT::i1, Promote);
-    setLoadExtAction(ISD::ZEXTLOAD, VT, MVT::i1, Promote);
-    setLoadExtAction(ISD::EXTLOAD, VT, MVT::i1, Promote);
-  }
-
-  setOperationAction(ISD::ConstantPool, PtrVT, Custom);
   setOperationAction(ISD::GlobalAddress, PtrVT, Custom);
-  setOperationAction(ISD::BlockAddress, PtrVT, Custom);
-  setOperationAction(ISD::JumpTable, PtrVT, Custom);
-
-  // Expand jump table branches as address arithmetic followed by an
-  // indirect jump.
-  setOperationAction(ISD::BR_JT, MVT::Other, Custom);
-
-  setOperationAction(ISD::BR_CC, MVT::i32, Legal);
-  setOperationAction(ISD::BR_CC, MVT::i64, Expand);
-  setOperationAction(ISD::BR_CC, MVT::f32, Expand);
-
-  setOperationAction(ISD::SELECT, MVT::i32, Expand);
-  setOperationAction(ISD::SELECT_CC, MVT::i32, Custom);
-  setOperationAction(ISD::SETCC, MVT::i32, Expand);
-
-  setCondCodeAction(ISD::SETGT, MVT::i32, Expand);
-  setCondCodeAction(ISD::SETLE, MVT::i32, Expand);
-  setCondCodeAction(ISD::SETUGT, MVT::i32, Expand);
-  setCondCodeAction(ISD::SETULE, MVT::i32, Expand);
-
-  // Implement custom stack allocations
-  setOperationAction(ISD::DYNAMIC_STACKALLOC, PtrVT, Custom);
-  // Implement custom stack save and restore
-  setOperationAction(ISD::STACKSAVE, MVT::Other, Custom);
-  setOperationAction(ISD::STACKRESTORE, MVT::Other, Custom);
 
   // Compute derived properties from the register classes
   computeRegisterProperties(STI.getRegisterInfo());
-}
-
-bool OpenRiscTargetLowering::isOffsetFoldingLegal(
-    const GlobalAddressSDNode *GA) const {
-  // The OpenRisc target isn't yet aware of offsets.
-  return false;
 }
 
 //===----------------------------------------------------------------------===//
@@ -119,87 +68,6 @@ bool OpenRiscTargetLowering::isOffsetFoldingLegal(
 //===----------------------------------------------------------------------===//
 
 #include "OpenRiscGenCallingConv.inc"
-
-static bool CC_OpenRisc_Custom(unsigned ValNo, MVT ValVT, MVT LocVT,
-                             CCValAssign::LocInfo LocInfo,
-                             ISD::ArgFlagsTy ArgFlags, CCState &State) {
-  static const MCPhysReg IntRegs[] = {OpenRisc::A2, OpenRisc::A3, OpenRisc::A4,
-                                      OpenRisc::A5, OpenRisc::A6, OpenRisc::A7};
-
-  if (ArgFlags.isByVal()) {
-    Align ByValAlign = ArgFlags.getNonZeroByValAlign();
-    unsigned ByValSize = ArgFlags.getByValSize();
-    if (ByValSize < 4) {
-      ByValSize = 4;
-    }
-    if (ByValAlign < Align(4)) {
-      ByValAlign = Align(4);
-    }
-    unsigned Offset = State.AllocateStack(ByValSize, ByValAlign);
-    State.addLoc(CCValAssign::getMem(ValNo, ValVT, Offset, LocVT, LocInfo));
-    // Mark all unused registers as allocated to avoid misuse
-    // of such registers.
-    while (State.AllocateReg(IntRegs))
-      ;
-    return false;
-  }
-
-  // Promote i8 and i16
-  if (LocVT == MVT::i8 || LocVT == MVT::i16) {
-    LocVT = MVT::i32;
-    if (ArgFlags.isSExt())
-      LocInfo = CCValAssign::SExt;
-    else if (ArgFlags.isZExt())
-      LocInfo = CCValAssign::ZExt;
-    else
-      LocInfo = CCValAssign::AExt;
-  }
-
-  unsigned Register;
-
-  Align OrigAlign = ArgFlags.getNonZeroOrigAlign();
-  bool needs64BitAlign = (ValVT == MVT::i32 && OrigAlign == Align(8));
-  bool needs128BitAlign = (ValVT == MVT::i32 && OrigAlign == Align(16));
-
-  if (ValVT == MVT::i32) {
-    Register = State.AllocateReg(IntRegs);
-    // If this is the first part of an i64 arg,
-    // the allocated register must be either A2, A4 or A6.
-    if (needs64BitAlign && (Register == OpenRisc::A3 || Register == OpenRisc::A5 ||
-                            Register == OpenRisc::A7))
-      Register = State.AllocateReg(IntRegs);
-    // arguments with 16byte alignment must be passed in the first register or
-    // passed via stack
-    if (needs128BitAlign && (Register != OpenRisc::A2))
-      while ((Register = State.AllocateReg(IntRegs)))
-        ;
-    LocVT = MVT::i32;
-  } else if (ValVT == MVT::f64) {
-    // Allocate int register and shadow next int register.
-    Register = State.AllocateReg(IntRegs);
-    if (Register == OpenRisc::A3 || Register == OpenRisc::A5 ||
-        Register == OpenRisc::A7)
-      Register = State.AllocateReg(IntRegs);
-    State.AllocateReg(IntRegs);
-    LocVT = MVT::i32;
-  } else {
-    report_fatal_error("Cannot handle this ValVT.");
-  }
-
-  if (!Register) {
-    unsigned Offset = State.AllocateStack(ValVT.getStoreSize(), OrigAlign);
-    State.addLoc(CCValAssign::getMem(ValNo, ValVT, Offset, LocVT, LocInfo));
-  } else {
-    State.addLoc(CCValAssign::getReg(ValNo, ValVT, Register, LocVT, LocInfo));
-  }
-
-  return false;
-}
-
-CCAssignFn *OpenRiscTargetLowering::CCAssignFnForCall(CallingConv::ID CC,
-                                                    bool IsVarArg) const {
-  return CC_OpenRisc_Custom;
-}
 
 SDValue OpenRiscTargetLowering::LowerFormalArguments(
     SDValue Chain, CallingConv::ID CallConv, bool IsVarArg,
@@ -219,17 +87,21 @@ SDValue OpenRiscTargetLowering::LowerFormalArguments(
   CCState CCInfo(CallConv, IsVarArg, DAG.getMachineFunction(), ArgLocs,
                  *DAG.getContext());
 
-  CCInfo.AnalyzeFormalArguments(Ins, CCAssignFnForCall(CallConv, IsVarArg));
+  CCInfo.AnalyzeFormalArguments(Ins, CC_OpenRisc);
+
+  unsigned StackSlotSize = 4;
+
 
   for (unsigned i = 0, e = ArgLocs.size(); i != e; ++i) {
     CCValAssign &VA = ArgLocs[i];
-    // Arguments stored on registers
+    
     if (VA.isRegLoc()) {
+      // Arguments passed in registers
       EVT RegVT = VA.getLocVT();
       const TargetRegisterClass *RC;
 
       if (RegVT == MVT::i32)
-        RC = &OpenRisc::ARRegClass;
+        RC = &OpenRisc::GPRRegClass;
       else
         report_fatal_error("RegVT not supported by FormalArguments Lowering");
 
@@ -348,7 +220,7 @@ OpenRiscTargetLowering::LowerCall(CallLoweringInfo &CLI,
              "Do not tail-call optimize if there is a byval argument.");
 
       if (!StackPtr.getNode())
-        StackPtr = DAG.getCopyFromReg(Chain, DL, OpenRisc::SP, PtrVT);
+        StackPtr = DAG.getCopyFromReg(Chain, DL, OpenRisc::R1, PtrVT);
       unsigned Offset = VA.getLocMemOffset();
       SDValue Address = DAG.getNode(ISD::ADD, DL, PtrVT, StackPtr,
                                     DAG.getIntPtrConstant(Offset, DL));
@@ -364,7 +236,7 @@ OpenRiscTargetLowering::LowerCall(CallLoweringInfo &CLI,
       // Work out the address of the stack slot.  Unpromoted ints and
       // floats are passed as right-justified 8-byte values.
       if (!StackPtr.getNode())
-        StackPtr = DAG.getCopyFromReg(Chain, DL, OpenRisc::SP, PtrVT);
+        StackPtr = DAG.getCopyFromReg(Chain, DL, OpenRisc::R1, PtrVT);
       unsigned Offset = VA.getLocMemOffset();
       SDValue Address = DAG.getNode(ISD::ADD, DL, PtrVT, StackPtr,
                                     DAG.getIntPtrConstant(Offset, DL));
@@ -522,315 +394,9 @@ OpenRiscTargetLowering::LowerReturn(SDValue Chain, CallingConv::ID CallConv,
   return DAG.getNode(OpenRiscISD::RET, DL, MVT::Other, RetOps);
 }
 
-static unsigned getBranchOpcode(ISD::CondCode Cond) {
-  switch (Cond) {
-  case ISD::SETEQ:
-    return OpenRisc::BEQ;
-  case ISD::SETNE:
-    return OpenRisc::BNE;
-  case ISD::SETLT:
-    return OpenRisc::BLT;
-  case ISD::SETLE:
-    return OpenRisc::BGE;
-  case ISD::SETGT:
-    return OpenRisc::BLT;
-  case ISD::SETGE:
-    return OpenRisc::BGE;
-  case ISD::SETULT:
-    return OpenRisc::BLTU;
-  case ISD::SETULE:
-    return OpenRisc::BGEU;
-  case ISD::SETUGT:
-    return OpenRisc::BLTU;
-  case ISD::SETUGE:
-    return OpenRisc::BGEU;
-  default:
-    llvm_unreachable("Unknown branch kind");
-  }
-}
-
-SDValue OpenRiscTargetLowering::LowerSELECT_CC(SDValue Op,
-                                             SelectionDAG &DAG) const {
-  SDLoc DL(Op);
-  EVT Ty = Op.getOperand(0).getValueType();
-  SDValue LHS = Op.getOperand(0);
-  SDValue RHS = Op.getOperand(1);
-  SDValue TrueValue = Op.getOperand(2);
-  SDValue FalseValue = Op.getOperand(3);
-  ISD::CondCode CC = cast<CondCodeSDNode>(Op->getOperand(4))->get();
-
-  unsigned BrOpcode = getBranchOpcode(CC);
-  SDValue TargetCC = DAG.getConstant(BrOpcode, DL, MVT::i32);
-
-  return DAG.getNode(OpenRiscISD::SELECT_CC, DL, Ty, LHS, RHS, TrueValue,
-                     FalseValue, TargetCC);
-}
-
-SDValue OpenRiscTargetLowering::LowerImmediate(SDValue Op,
-                                             SelectionDAG &DAG) const {
-  const ConstantSDNode *CN = cast<ConstantSDNode>(Op);
-  SDLoc DL(CN);
-  APInt APVal = CN->getAPIntValue();
-  int64_t Value = APVal.getSExtValue();
-  if (Op.getValueType() == MVT::i32) {
-    // Check if use node maybe lowered to the MOVI instruction
-    if (Value > -2048 && Value <= 2047)
-      return Op;
-    // Check if use node maybe lowered to the ADDMI instruction
-    SDNode &OpNode = *Op.getNode();
-    if ((OpNode.hasOneUse() && OpNode.use_begin()->getOpcode() == ISD::ADD) &&
-        isShiftedInt<16, 8>(Value))
-      return Op;
-    Type *Ty = Type::getInt32Ty(*DAG.getContext());
-    Constant *CV = ConstantInt::get(Ty, Value);
-    SDValue CP = DAG.getConstantPool(CV, MVT::i32);
-    return CP;
-  }
-  return Op;
-}
-
-SDValue OpenRiscTargetLowering::LowerGlobalAddress(SDValue Op,
-                                                 SelectionDAG &DAG) const {
-  const GlobalAddressSDNode *G = cast<GlobalAddressSDNode>(Op);
-  SDLoc DL(Op);
-  auto PtrVT = Op.getValueType();
-  const GlobalValue *GV = G->getGlobal();
-
-  SDValue CPAddr = DAG.getTargetConstantPool(GV, PtrVT, Align(4));
-  SDValue CPWrap = getAddrPCRel(CPAddr, DAG);
-
-  return CPWrap;
-}
-
-SDValue OpenRiscTargetLowering::LowerBlockAddress(SDValue Op,
-                                                SelectionDAG &DAG) const {
-  BlockAddressSDNode *Node = cast<BlockAddressSDNode>(Op);
-  const BlockAddress *BA = Node->getBlockAddress();
-  EVT PtrVT = Op.getValueType();
-
-  OpenRiscConstantPoolValue *CPV =
-      OpenRiscConstantPoolConstant::Create(BA, 0, OpenRiscCP::CPBlockAddress);
-  SDValue CPAddr = DAG.getTargetConstantPool(CPV, PtrVT, Align(4));
-  SDValue CPWrap = getAddrPCRel(CPAddr, DAG);
-
-  return CPWrap;
-}
-
-SDValue OpenRiscTargetLowering::LowerBR_JT(SDValue Op, SelectionDAG &DAG) const {
-  SDValue Chain = Op.getOperand(0);
-  SDValue Table = Op.getOperand(1);
-  SDValue Index = Op.getOperand(2);
-  SDLoc DL(Op);
-  JumpTableSDNode *JT = cast<JumpTableSDNode>(Table);
-  MachineFunction &MF = DAG.getMachineFunction();
-  const MachineJumpTableInfo *MJTI = MF.getJumpTableInfo();
-  SDValue TargetJT = DAG.getTargetJumpTable(JT->getIndex(), MVT::i32);
-  const DataLayout &TD = DAG.getDataLayout();
-  EVT PtrVT = Table.getValueType();
-  unsigned EntrySize = MJTI->getEntrySize(TD);
-
-  Index = DAG.getNode(ISD::MUL, DL, Index.getValueType(), Index,
-                      DAG.getConstant(EntrySize, DL, Index.getValueType()));
-  SDValue Addr = DAG.getNode(ISD::ADD, DL, Index.getValueType(), Index, Table);
-  SDValue LD =
-      DAG.getLoad(PtrVT, DL, Chain, Addr,
-                  MachinePointerInfo::getJumpTable(DAG.getMachineFunction()));
-
-  return DAG.getNode(OpenRiscISD::BR_JT, DL, MVT::Other, LD.getValue(1), LD,
-                     TargetJT);
-}
-
-SDValue OpenRiscTargetLowering::LowerJumpTable(SDValue Op,
-                                             SelectionDAG &DAG) const {
-  JumpTableSDNode *JT = cast<JumpTableSDNode>(Op);
-  EVT PtrVT = Op.getValueType();
-
-  // Create a constant pool entry for the callee address
-  OpenRiscConstantPoolValue *CPV =
-      OpenRiscConstantPoolJumpTable::Create(*DAG.getContext(), JT->getIndex());
-
-  // Get the address of the callee into a register
-  SDValue CPAddr = DAG.getTargetConstantPool(CPV, PtrVT, Align(4));
-
-  return getAddrPCRel(CPAddr, DAG);
-}
-
-SDValue OpenRiscTargetLowering::getAddrPCRel(SDValue Op,
-                                           SelectionDAG &DAG) const {
-  SDLoc DL(Op);
-  EVT Ty = Op.getValueType();
-  return DAG.getNode(OpenRiscISD::PCREL_WRAPPER, DL, Ty, Op);
-}
-
-SDValue OpenRiscTargetLowering::LowerConstantPool(ConstantPoolSDNode *CP,
-                                                SelectionDAG &DAG) const {
-  EVT PtrVT = getPointerTy(DAG.getDataLayout());
-  SDValue Result;
-  if (!CP->isMachineConstantPoolEntry()) {
-    Result = DAG.getTargetConstantPool(CP->getConstVal(), PtrVT, CP->getAlign(),
-                                       CP->getOffset());
-  } else {
-    report_fatal_error("This constantpool type is not supported yet");
-  }
-
-  return getAddrPCRel(Result, DAG);
-}
-
-SDValue OpenRiscTargetLowering::LowerSTACKSAVE(SDValue Op,
-                                             SelectionDAG &DAG) const {
-  return DAG.getCopyFromReg(Op.getOperand(0), SDLoc(Op), OpenRisc::SP,
-                            Op.getValueType());
-}
-
-SDValue OpenRiscTargetLowering::LowerSTACKRESTORE(SDValue Op,
-                                                SelectionDAG &DAG) const {
-  return DAG.getCopyToReg(Op.getOperand(0), SDLoc(Op), OpenRisc::SP,
-                          Op.getOperand(1));
-}
-
-SDValue OpenRiscTargetLowering::LowerDYNAMIC_STACKALLOC(SDValue Op,
-                                                      SelectionDAG &DAG) const {
-  SDValue Chain = Op.getOperand(0); // Legalize the chain.
-  SDValue Size = Op.getOperand(1);  // Legalize the size.
-  EVT VT = Size->getValueType(0);
-  SDLoc DL(Op);
-
-  // Round up Size to 32
-  SDValue SizeTmp =
-      DAG.getNode(ISD::ADD, DL, VT, Size, DAG.getConstant(31, DL, MVT::i32));
-  SDValue SizeRoundUp = DAG.getNode(ISD::AND, DL, VT, SizeTmp,
-                                    DAG.getConstant(~31, DL, MVT::i32));
-
-  unsigned SPReg = OpenRisc::SP;
-  SDValue SP = DAG.getCopyFromReg(Chain, DL, SPReg, VT);
-  SDValue NewSP = DAG.getNode(ISD::SUB, DL, VT, SP, SizeRoundUp); // Value
-  Chain = DAG.getCopyToReg(SP.getValue(1), DL, SPReg, NewSP); // Output chain
-
-  SDValue NewVal = DAG.getCopyFromReg(Chain, DL, SPReg, MVT::i32);
-  Chain = NewVal.getValue(1);
-
-  SDValue Ops[2] = {NewVal, Chain};
-  return DAG.getMergeValues(Ops, DL);
-}
-
-SDValue OpenRiscTargetLowering::LowerOperation(SDValue Op,
-                                             SelectionDAG &DAG) const {
+SDValue OpenRiscTargetLowering::LowerOperation(SDValue Op, SelectionDAG &DAG) const {
   switch (Op.getOpcode()) {
-  case ISD::BR_JT:
-    return LowerBR_JT(Op, DAG);
-  case ISD::Constant:
-    return LowerImmediate(Op, DAG);
-  case ISD::GlobalAddress:
-    return LowerGlobalAddress(Op, DAG);
-  case ISD::BlockAddress:
-    return LowerBlockAddress(Op, DAG);
-  case ISD::JumpTable:
-    return LowerJumpTable(Op, DAG);
-  case ISD::ConstantPool:
-    return LowerConstantPool(cast<ConstantPoolSDNode>(Op), DAG);
-  case ISD::SELECT_CC:
-    return LowerSELECT_CC(Op, DAG);
-  case ISD::STACKSAVE:
-    return LowerSTACKSAVE(Op, DAG);
-  case ISD::STACKRESTORE:
-    return LowerSTACKRESTORE(Op, DAG);
-  case ISD::DYNAMIC_STACKALLOC:
-    return LowerDYNAMIC_STACKALLOC(Op, DAG);
   default:
     report_fatal_error("Unexpected node to lower");
-  }
-}
-
-const char *OpenRiscTargetLowering::getTargetNodeName(unsigned Opcode) const {
-  switch (Opcode) {
-  case OpenRiscISD::BR_JT:
-    return "OpenRiscISD::BR_JT";
-  case OpenRiscISD::CALL:
-    return "OpenRiscISD::CALL";
-  case OpenRiscISD::PCREL_WRAPPER:
-    return "OpenRiscISD::PCREL_WRAPPER";
-  case OpenRiscISD::RET:
-    return "OpenRiscISD::RET";
-  case OpenRiscISD::SELECT_CC:
-    return "OpenRiscISD::SELECT_CC";
-  }
-  return nullptr;
-}
-
-//===----------------------------------------------------------------------===//
-// Custom insertion
-//===----------------------------------------------------------------------===//
-
-MachineBasicBlock *
-OpenRiscTargetLowering::emitSelectCC(MachineInstr &MI,
-                                   MachineBasicBlock *MBB) const {
-  const TargetInstrInfo &TII = *Subtarget.getInstrInfo();
-  DebugLoc DL = MI.getDebugLoc();
-
-  MachineOperand &LHS = MI.getOperand(1);
-  MachineOperand &RHS = MI.getOperand(2);
-  MachineOperand &TrueValue = MI.getOperand(3);
-  MachineOperand &FalseValue = MI.getOperand(4);
-  unsigned BrKind = MI.getOperand(5).getImm();
-
-  // To "insert" a SELECT_CC instruction, we actually have to insert
-  // CopyMBB and SinkMBB  blocks and add branch to MBB. We build phi
-  // operation in SinkMBB like phi (TrueVakue,FalseValue), where TrueValue
-  // is passed from MMB and FalseValue is passed from CopyMBB.
-  //   MBB
-  //   |   \
-  //   |   CopyMBB
-  //   |   /
-  //   SinkMBB
-  // The incoming instruction knows the
-  // destination vreg to set, the condition code register to branch on, the
-  // true/false values to select between, and a branch opcode to use.
-  const BasicBlock *LLVM_BB = MBB->getBasicBlock();
-  MachineFunction::iterator It = ++MBB->getIterator();
-
-  MachineFunction *F = MBB->getParent();
-  MachineBasicBlock *CopyMBB = F->CreateMachineBasicBlock(LLVM_BB);
-  MachineBasicBlock *SinkMBB = F->CreateMachineBasicBlock(LLVM_BB);
-
-  F->insert(It, CopyMBB);
-  F->insert(It, SinkMBB);
-
-  // Transfer the remainder of MBB and its successor edges to SinkMBB.
-  SinkMBB->splice(SinkMBB->begin(), MBB,
-                  std::next(MachineBasicBlock::iterator(MI)), MBB->end());
-  SinkMBB->transferSuccessorsAndUpdatePHIs(MBB);
-
-  MBB->addSuccessor(CopyMBB);
-  MBB->addSuccessor(SinkMBB);
-
-  BuildMI(MBB, DL, TII.get(BrKind))
-      .addReg(LHS.getReg())
-      .addReg(RHS.getReg())
-      .addMBB(SinkMBB);
-
-  CopyMBB->addSuccessor(SinkMBB);
-
-  //  SinkMBB:
-  //   %Result = phi [ %FalseValue, CopyMBB ], [ %TrueValue, MBB ]
-  //  ...
-
-  BuildMI(*SinkMBB, SinkMBB->begin(), DL, TII.get(OpenRisc::PHI),
-          MI.getOperand(0).getReg())
-      .addReg(FalseValue.getReg())
-      .addMBB(CopyMBB)
-      .addReg(TrueValue.getReg())
-      .addMBB(MBB);
-
-  MI.eraseFromParent(); // The pseudo instruction is gone now.
-  return SinkMBB;
-}
-
-MachineBasicBlock *OpenRiscTargetLowering::EmitInstrWithCustomInserter(
-    MachineInstr &MI, MachineBasicBlock *MBB) const {
-  switch (MI.getOpcode()) {
-  case OpenRisc::SELECT:
-    return emitSelectCC(MI, MBB);
-  default:
-    llvm_unreachable("Unexpected instr type to insert");
   }
 }

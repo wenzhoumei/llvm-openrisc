@@ -22,7 +22,7 @@ class OpenRisc_Inst<dag outs, dag ins, string asmStr, list<dag> pattern,
   dag OutOperandList = outs;
   dag InOperandList = ins;
 
-  let asmString = asmStr;
+  let AsmString = asmStr;
   let Pattern = pattern;
   let Itinerary = itin;
 }
@@ -34,8 +34,7 @@ class OpenRisc_Inst<dag outs, dag ins, string asmStr, list<dag> pattern,
 class F1_Inst<bits<6> opcode1, bits<2> opcode2, bits<4> opcode3,
               dag outs, dag ins, string asmStr, list<dag> pattern,
               InstrItinClass itin = NoItinerary> :
-  OpenRisc_Inst<(outs, ins, asmStr, pattern,
-                 InstrItinClass itin = NoItinerary>) {
+  OpenRisc_Inst<outs, ins, asmStr, pattern, itin> {
   bits<5> rd;
   bits<5> ra;
   bits<5> rb;
@@ -59,8 +58,7 @@ class F1_Inst<bits<6> opcode1, bits<2> opcode2, bits<4> opcode3,
 class F2_Inst<bits<6> opcode,
               dag outs, dag ins, string asmStr, list<dag> pattern,
               InstrItinClass itin = NoItinerary> :
-  OpenRisc_Inst<(outs, ins, asmStr, pattern,
-                InstrItinClass itin = NoItinerary>) {
+  OpenRisc_Inst<outs, ins, asmStr, pattern, itin> {
   bits<5>  rd;
   bits<5>  ra;
   bits<16> imm;
@@ -78,8 +76,7 @@ class F2_Inst<bits<6> opcode,
 class F3_Inst<bits<6> opcode1, bits<4> opcode2, bits<4> opcode3,
               dag outs, dag ins, string asmStr, list<dag> pattern,
               InstrItinClass itin = NoItinerary> :
-  OpenRisc_Inst<(outs, ins, asmStr, pattern,
-                InstrItinClass itin = NoItinerary>) {
+  OpenRisc_Inst<outs, ins, asmStr, pattern, itin> {
   bits<5> rd;
   bits<5> ra;
   bits<5> rb;
@@ -103,8 +100,7 @@ class F3_Inst<bits<6> opcode1, bits<4> opcode2, bits<4> opcode3,
 class F4_Inst<bits<6> opcode1, bits<2> opcode2,
               dag outs, dag ins, string asmStr, list<dag> pattern,
               InstrItinClass itin = NoItinerary> :
-  OpenRisc_Inst<(outs, ins, asmStr, pattern,
-                InstrItinClass itin = NoItinerary>) {
+  OpenRisc_Inst<outs, ins, asmStr, pattern, itin> {
   bits<5> rd;
   bits<5> ra;
   bits<8> reserved = 0;
@@ -121,27 +117,11 @@ class F4_Inst<bits<6> opcode1, bits<2> opcode2,
 //===----------------------------------------------------------------------===//
 // Format 5
 //===----------------------------------------------------------------------===//
-// Includes: l.bf, l.bnf, l.j, l.jal
-class F5_Inst<bits<6>  opcode,
-              dag outs, dag ins, string asmStr, list<dag> pattern,
-              InstrItinClass itin = NoItinerary> :
-  OpenRisc_Inst<(outs, ins, asmStr, pattern,
-                InstrItinClass itin = NoItinerary>) {
-  bits<26> imm;
-
-  let Inst{31-26} = opcode;
-  let Inst{25-0}  = imm;
-}
-
-//===----------------------------------------------------------------------===//
-// Format 6
-//===----------------------------------------------------------------------===//
 // l.jalr, l.jr
-class F6_Inst<bits<6> opcode,
+class F5_Inst<bits<6> opcode,
               dag outs, dag ins, string asmStr, list<dag> pattern,
               InstrItinClass itin = NoItinerary> :
-  OpenRisc_Inst<(outs, ins, asmStr, pattern,
-                InstrItinClass itin = NoItinerary>) {
+  OpenRisc_Inst<outs, ins, asmStr, pattern, itin> {
   bits<10> reserved1 = 0;
   bits<5>  rb;
   bits<11> reserved2 = 0;
@@ -153,14 +133,46 @@ class F6_Inst<bits<6> opcode,
 }
 
 //===----------------------------------------------------------------------===//
-// Format 7
+// Format 6
 //===----------------------------------------------------------------------===//
-// Includes: l.sb, l.sh, sw
-class F7_Inst<bits<6> opcode,
+// Includes: l.bf, l.bnf, l.j, l.jal
+class F6_Inst<bits<6>  opcode,
               dag outs, dag ins, string asmStr, list<dag> pattern,
               InstrItinClass itin = NoItinerary> :
-  OpenRisc_Inst<(outs, ins, asmStr, pattern,
-                InstrItinClass itin = NoItinerary>) {
+  OpenRisc_Inst<outs, ins, asmStr, pattern, itin> {
+  bits<26> imm;
+
+  let Inst{31-26} = opcode;
+  let Inst{25-0}  = imm;
+}
+
+//===----------------------------------------------------------------------===//
+// Format 7
+//===----------------------------------------------------------------------===//
+// Includes: l.lbs, l.lbz, l.ld, l.lhs, l.lhz, l.lws, l.lwz
+class F7_Inst<bits<6> opcode,
+               dag outs, dag ins, string asmStr, list<dag> pattern,
+               InstrItinClass itin = NoItinerary> :
+  OpenRisc_Inst<outs, ins, asmStr, pattern, itin> {
+
+  bits<5>  rd;
+  bits<5>  ra;
+  bits<16> imm;
+
+  let Inst{31-26} = opcode;
+  let Inst{25-21} = rd;
+  let Inst{20-16} = ra;
+  let Inst{15-0}  = imm;
+}
+
+//===----------------------------------------------------------------------===//
+// Format 8
+//===----------------------------------------------------------------------===//
+// Includes: l.sb, l.sh, sw
+class F8_Inst<bits<6> opcode,
+              dag outs, dag ins, string asmStr, list<dag> pattern,
+              InstrItinClass itin = NoItinerary> :
+  OpenRisc_Inst<outs, ins, asmStr, pattern, itin> {
   bits<16>  imm;
   bits<5>  ra;
   bits<5>  rb;
@@ -173,14 +185,13 @@ class F7_Inst<bits<6> opcode,
 }
 
 //===----------------------------------------------------------------------===//
-// Format 8
+// Format 9
 //===----------------------------------------------------------------------===//
 // Includes: l.sfeq, l.sfges, l.sfgeu, l.sfgts, l.sfgtu, l.sfles, l.sfleu, l.sflts, l.sfltu, l.sfne
-class F8_Inst<bits<11> opcode,
+class F9_Inst<bits<11> opcode,
               dag outs, dag ins, string asmStr, list<dag> pattern,
               InstrItinClass itin = NoItinerary> :
-  OpenRisc_Inst<(outs, ins, asmStr, pattern,
-                InstrItinClass itin = NoItinerary>) {
+  OpenRisc_Inst<outs, ins, asmStr, pattern, itin> {
   bits<5>  ra;
   bits<5>  rb;
   bits<11> reserved;
@@ -192,14 +203,13 @@ class F8_Inst<bits<11> opcode,
 }
 
 //===----------------------------------------------------------------------===//
-// Format 9
+// Format 10
 //===----------------------------------------------------------------------===//
 // Includes: l.movhi
-class F9_Inst<bits<6> opcode1, bits<1> opcode2,
+class F10_Inst<bits<6> opcode1, bits<1> opcode2,
               dag outs, dag ins, string asmStr, list<dag> pattern,
               InstrItinClass itin = NoItinerary> :
-  OpenRisc_Inst<(outs, ins, asmStr, pattern,
-                InstrItinClass itin = NoItinerary>) {
+  OpenRisc_Inst<outs, ins, asmStr, pattern, itin> {
 
   bits<5>  rd;
   bits<4>  reserved;
@@ -213,82 +223,13 @@ class F9_Inst<bits<6> opcode1, bits<1> opcode2,
 }
 
 //===----------------------------------------------------------------------===//
-// Format 10
-//===----------------------------------------------------------------------===//
-// Includes: l.nop
-class F10_Inst<bits<8> opcode,
-               dag outs, dag ins, string asmStr, list<dag> pattern,
-               InstrItinClass itin = NoItinerary> :
-  OpenRisc_Inst<(outs, ins, asmStr, pattern,
-                InstrItinClass itin = NoItinerary>) {
-
-  bits<8>  reserved;
-  bits<16> imm;
-
-  let Inst{31-24} = opcode;
-  let Inst{23-16} = reserved;
-  let Inst{15-0}  = imm;
-}
-
-//===----------------------------------------------------------------------===//
 // Format 11
 //===----------------------------------------------------------------------===//
-// Includes: l.rfe
+// Includes: l.mfspr, l.mtspr
 class F11_Inst<bits<6> opcode,
                dag outs, dag ins, string asmStr, list<dag> pattern,
                InstrItinClass itin = NoItinerary> :
-  OpenRisc_Inst<(outs, ins, asmStr, pattern,
-                InstrItinClass itin = NoItinerary>) {
-  bits<26> reserved;
-
-  let Inst{31-26} = opcode;
-  let Inst{25-0}  = reserved;
-}
-
-//===----------------------------------------------------------------------===//
-// Format 12
-//===----------------------------------------------------------------------===//
-// Includes: l.sys
-class F12_Inst<bits<16> opcode,
-               dag outs, dag ins, string asmStr, list<dag> pattern,
-               InstrItinClass itin = NoItinerary> :
-  OpenRisc_Inst<(outs, ins, asmStr, pattern,
-                InstrItinClass itin = NoItinerary>) {
-  bits<16> imm;
-
-  let Inst{31-16} = opcode;
-  let Inst{15-0}  = imm;
-}
-
-//===----------------------------------------------------------------------===//
-// Format 13
-//===----------------------------------------------------------------------===//
-// Includes: l.lbs, l.lbz, l.ld, l.lhs, l.lhz, l.lws, l.lwz
-class F13_Inst<bits<6> opcode,
-               dag outs, dag ins, string asmStr, list<dag> pattern,
-               InstrItinClass itin = NoItinerary> :
-  OpenRisc_Inst<(outs, ins, asmStr, pattern,
-                InstrItinClass itin = NoItinerary>) {
-
-  bits<5>  rd;
-  bits<5>  ra;
-  bits<16> imm;
-
-  let Inst{31-26} = opcode;
-  let Inst{25-21} = rd;
-  let Inst{20-16} = ra;
-  let Inst{15-0}  = imm;
-}
-
-//===----------------------------------------------------------------------===//
-// Format 14
-//===----------------------------------------------------------------------===//
-// Includes: l.mfspr, l.mtspr
-class F14_Inst<bits<6> opcode,
-               dag outs, dag ins, string asmStr, list<dag> pattern,
-               InstrItinClass itin = NoItinerary> :
-  OpenRisc_Inst<(outs, ins, asmStr, pattern,
-                InstrItinClass itin = NoItinerary>) {
+  OpenRisc_Inst<outs, ins, asmStr, pattern, itin> {
 
   bits<5>  ra;
   bits<5>  rb;
@@ -299,4 +240,49 @@ class F14_Inst<bits<6> opcode,
   let Inst{20-16} = ra;
   let Inst{15-11} = rb;
   let Inst{10-0}  = imm{10-0};
+}
+
+//===----------------------------------------------------------------------===//
+// Format 12
+//===----------------------------------------------------------------------===//
+// Includes: l.nop
+class F12_Inst<bits<8> opcode,
+               dag outs, dag ins, string asmStr, list<dag> pattern,
+               InstrItinClass itin = NoItinerary> :
+  OpenRisc_Inst<outs, ins, asmStr, pattern, itin> {
+
+  bits<8>  reserved;
+  bits<16> imm;
+
+  let Inst{31-24} = opcode;
+  let Inst{23-16} = reserved;
+  let Inst{15-0}  = imm;
+}
+
+//===----------------------------------------------------------------------===//
+// Format 13
+//===----------------------------------------------------------------------===//
+// Includes: l.rfe
+class F13_Inst<bits<6> opcode,
+               dag outs, dag ins, string asmStr, list<dag> pattern,
+               InstrItinClass itin = NoItinerary> :
+  OpenRisc_Inst<outs, ins, asmStr, pattern, itin> {
+  bits<26> reserved;
+
+  let Inst{31-26} = opcode;
+  let Inst{25-0}  = reserved;
+}
+
+//===----------------------------------------------------------------------===//
+// Format 14
+//===----------------------------------------------------------------------===//
+// Includes: l.sys
+class F14_Inst<bits<16> opcode,
+               dag outs, dag ins, string asmStr, list<dag> pattern,
+               InstrItinClass itin = NoItinerary> :
+  OpenRisc_Inst<outs, ins, asmStr, pattern, itin> {
+  bits<16> imm;
+
+  let Inst{31-16} = opcode;
+  let Inst{15-0}  = imm;
 }

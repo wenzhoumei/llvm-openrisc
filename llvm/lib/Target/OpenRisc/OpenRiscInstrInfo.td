@@ -23,8 +23,8 @@ class F1_InstWrapper<bits<6> opcode1, bits<2> opcode2, bits<4> opcode3,
                      string opcodeAsm, SDPatternOperator opNode,
                      InstrItinClass itin = NoItinerary> :
     F1_Inst<opcode1, opcode2, opcode3,
-            (outs GPR_Class:$rd), (ins GPR_Class:$ra, GPR_Class:$rb),
-            opcodeAsm#" $rd, $ra, $rb", [(set GPR_Class:$rd, (opNode GPR_Class:$ra, GPR_Class:$rb))],
+            (outs GPR:$rd), (ins GPR:$ra, GPR:$rb),
+            opcodeAsm#" $rd, $ra, $rb", [(set GPR:$rd, (opNode GPR:$ra, GPR:$rb))],
             itin>;
 
 def ADD  : F1_InstWrapper<0x38, 0x0, 0x0, "l.add", add>;
@@ -41,8 +41,8 @@ class F2_InstWrapper<bits<6> opcode,
                      string opcodeAsm, SDPatternOperator opNode,
                      InstrItinClass itin = NoItinerary> :
     F2_Inst<opcode,
-            (outs GPR_Class:$rd), (ins GPR_Class:$ra, immOp:$imm),
-            opcodeAsm#" $rd, $ra, $imm", [(set GPR_Class:$rd, (opNode GPR_Class:$ra, i16imm:$imm))],
+            (outs GPR:$rd), (ins GPR:$ra, immOp:$imm),
+            opcodeAsm#" $rd, $ra, $imm", [(set GPR:$rd, (opNode GPR:$ra, i16imm:$imm))],
             itin>;
 
 def ADDI  : F2_InstWrapper<0x27, "l.addi", add>;
@@ -58,8 +58,8 @@ class F3_InstWrapper<bits<6> opcode1, bits<4> opcode2, bits<4> opcode3,
                      string opcodeAsm, SDPatternOperator opNode,
                      InstrItinClass itin = NoItinerary> :
     F3_Inst<opcode1, opcode2, opcode3,
-            (outs GPR_Class:$rd), (ins GPR_Class:$ra, GPR_Class:$rb),
-            opcodeAsm#" $rd, $ra, $rb", [(set GPR_Class:$rd, (opNode GPR_Class:$ra, GPR_Class:$rb))],
+            (outs GPR:$rd), (ins GPR:$ra, GPR:$rb),
+            opcodeAsm#" $rd, $ra, $rb", [(set GPR:$rd, (opNode GPR:$ra, GPR:$rb))],
             itin>;
 
 def SLL  : F3_InstWrapper<0x38, 0x0, 0x8, "l.sll", shl>;
@@ -73,8 +73,8 @@ class F4_InstWrapper<bits<6> opcode1, bits<2> opcode2,
                      string opcodeAsm, SDPatternOperator opNode,
                      InstrItinClass itin = NoItinerary> :
     F4_Inst<opcode1, opcode2,
-            (outs GPR_Class:$rd), (ins GPR_Class:$ra, immOp:$imm),
-            opcodeAsm#" $rd, $ra, $imm", [(set GPR_Class:$rd, (opNode GPR_Class:$ra, immOp:$imm))],
+            (outs GPR:$rd), (ins GPR:$ra, immOp:$imm),
+            opcodeAsm#" $rd, $ra, $imm", [(set GPR:$rd, (opNode GPR:$ra, uimm5:$imm))],
             itin>;
 
 def SLLI  : F4_InstWrapper<0x2e, 0x0, "l.slli", shl>;
@@ -82,153 +82,152 @@ def SRLI  : F4_InstWrapper<0x2e, 0x1, "l.srli", srl>;
 def SRAI  : F4_InstWrapper<0x2e, 0x2, "l.srai", sra>;
 
 //===----------------------------------------------------------------------===//
-// Format 5  - Jumps and branch instructions with immediate
+// Format 5 - Jumps and branch instructions with register
 //===----------------------------------------------------------------------===//
-class F5_InstWrapper<bits<6> opcode,
+class F5_InstWrapper<bits<5> opcode,
                      string opcodeAsm, list<dag> pattern,
                      InstrItinClass itin = NoItinerary> :
     F5_Inst<opcode,
-            (outs), (ins immOp:$imm),
-            opcodeAsm#" $imm", pattern,
+            (outs), (ins GPR:$rb),
+            opcodeAsm#" $rb", pattern,
             itin>;
 
-def J   : F5_InstWrapper<0x0, "l.j", [(br immOp:$imm)]>;
-def JAL : F5_InstWrapper<0x1, "l.jal", [(OpenRisc_Call immOp:$imm)]>;
-def BNF : F5_InstWrapper<0x3, "l.bnf", []>;
-def BF  : F5_InstWrapper<0x4, "l.bf", []>;
+def JR   : F5_InstWrapper<0x11, "l.jr", [(brind GPR:$rb)]>;
+def JALR : F5_InstWrapper<0x12, "l.jalr", [(OpenRisc_Call GPR:$rb)]>;
 
 //===----------------------------------------------------------------------===//
-// Format 6 - Jumps and branch instructions with register
+// Format 6  - Jumps and branch instructions with immediate
 //===----------------------------------------------------------------------===//
 class F6_InstWrapper<bits<6> opcode,
                      string opcodeAsm, list<dag> pattern,
                      InstrItinClass itin = NoItinerary> :
     F6_Inst<opcode,
-            (outs), (ins GPR_Class:$rb),
-            opcodeAsm#" $rb", pattern,
-            itin>;
-
-def JR   : F6_InstWrapper<0x11, "l.jr", [(brind GPR_Class:$rb)]>;
-def JALR : F6_InstWrapper<0x12, "l.jalr", []>;
-
-//===----------------------------------------------------------------------===//
-// Format 7 - Store instructions
-//===----------------------------------------------------------------------===//
-class F7_InstWrapper<bits<6> opcode,
-                     string opcodeAsm, list<dag> pattern,
-                     InstrItinClass itin = NoItinerary> :
-    F7_Inst<opcode,
-            (outs), (ins GPR_Class:$ra, GPR_Class:$rb, immOp:$imm),
-            opcodeAsm#" $imm($ra), $rb", pattern,
-            itin>;
-            
-def SW : F7_InstWrapper<0x35, "l.sw", [(store GPR_Class:$rb addrmode_imm11:$addr)]>;
-def SB : F7_InstWrapper<0x36, "l.sb", [(truncstorei8 GPR_Class:$rb addrmode_imm11:$addr)]>;
-def SH : F7_InstWrapper<0x37, "l.sh", [(truncstorei16 GPR_Class:$rb addrmode_imm11:$addr)]>;
-
-//===----------------------------------------------------------------------===//
-// Format 8 - Conditional set-flag instructions
-//===----------------------------------------------------------------------===//
-class F8_InstWrapper<bits<11> opcode,
-                     string opcodeAsm, list<dag> pattern,
-                     InstrItinClass itin = NoItinerary> :
-    F8_Inst<opcode,
-            (outs), (ins GPR_Class:$ra, GPR_Class:$rb),
-            opcodeAsm#" $imm($ra), $rb", pattern,
-            itin>;
-
-def SFEQ  : F8_InstWrapper<0x720, "l.sfeq", []>;
-def SFNE  : F8_InstWrapper<0x721, "l.sfne", []>;
-def SFGTU : F8_InstWrapper<0x722, "l.sfgtu", []>;
-def SFGEU : F8_InstWrapper<0x723, "l.sfgeu", []>;
-def SFLTU : F8_InstWrapper<0x724, "l.sfltu", []>;
-def SFLEU : F8_InstWrapper<0x725, "l.sfleu", []>;
-
-def SFGTS : F8_InstWrapper<0x72a, "l.sfgts", []>;
-def SFGES : F8_InstWrapper<0x72b, "l.sfges", []>;
-def SFLTS : F8_InstWrapper<0x72c, "l.sflts", []>;
-def SFLES : F8_InstWrapper<0x72d, "l.sfles", []>;
-
-//===----------------------------------------------------------------------===//
-// Format 9 - "Move Immediate High" instruction
-//===----------------------------------------------------------------------===//
-class F9_InstWrapper<bits<6> opcode1, bits<1> opcode2,
-                     string opcodeAsm, list<dag> pattern,
-                     InstrItinClass itin = NoItinerary> :
-    F9_Inst<opcode1, opcode2,
-            (outs GPR_Class:$rd), (ins immOp:$imm),
-            opcodeAsm#" $rd, $imm", pattern,
-            itin>;
-
-def MOVHI : F9_InstWrapper<0x6, 0x0, "l.movhi", [(set GPR_Class:$rd uimm16hi:$imm)]>;
-
-//===----------------------------------------------------------------------===//
-// Format 10 - "No Operation" instruction
-//===----------------------------------------------------------------------===//
-class F10_InstWrapper<bits<8> opcode,
-                     string opcodeAsm, list<dag> pattern,
-                     InstrItinClass itin = NoItinerary> :
-    F10_Inst<opcode,
-            (outs), (ins immOp:$imm),
+            (outs), (ins tglobaladdr:$imm),
             opcodeAsm#" $imm", pattern,
             itin>;
 
-def NOP : F10_InstWrapper<0x15, "l.nop", []>;
+def J   : F6_InstWrapper<0x0, "l.j", [(br tglobaladdr:$imm)]>;
+def JAL : F6_InstWrapper<0x1, "l.jal", [(OpenRisc_Call tglobaladdr:$imm)]>;
+def BNF : F6_InstWrapper<0x3, "l.bnf", []>;
+def BF  : F6_InstWrapper<0x4, "l.bf", []>;
 
 //===----------------------------------------------------------------------===//
-// Format 11 - "Return From Exception" instruction
+// Format 7 - Load instructions
 //===----------------------------------------------------------------------===//
-class F11_InstWrapper<bits<6> opcode,
+class F7_InstWrapper<bits<6> opcode,
+                     string opcodeAsm, SDPatternOperator opNode, Operand memOp,
+                     InstrItinClass itin = NoItinerary> :
+    F7_Inst<opcode,
+            (outs GPR:$rd), (ins GPR:$ra, memOp:$imm),
+            opcodeAsm#" $rd, $imm($ra)", [(set GPR:$rd, (addrimm GPR:$ra, i16imm:$imm))], /* https://vscode.dev/github.com/wenzhoumei/llvm-openrisc/blob/main/llvm/lib/Target/RISCV/RISCVInstrInfo.td#L1708 */
+            itin>;
+
+def LWZ   : F7_InstWrapper<0x21, "l.lwz", load, mem32>;
+def LWS   : F7_InstWrapper<0x22, "l.lws", load, mem32>;
+def LBZ   : F7_InstWrapper<0x23, "l.lbz", zextloadi8, mem8>;
+def LBS   : F7_InstWrapper<0x24, "l.lbs", sextloadi8, mem8>;
+def LHZ   : F7_InstWrapper<0x25, "l.lhz", sextloadi16, mem16>;
+def LHS   : F7_InstWrapper<0x26, "l.lhs", sextloadi16, mem16>;
+
+//===----------------------------------------------------------------------===//
+// Format 8 - Store instructions
+//===----------------------------------------------------------------------===//
+class F8_InstWrapper<bits<6> opcode,
                      string opcodeAsm, list<dag> pattern,
                      InstrItinClass itin = NoItinerary> :
-    F11_Inst<opcode,
+    F8_Inst<opcode,
+            (outs), (ins GPR:$ra, GPR:$rb, immOp:$imm),
+            opcodeAsm#" $imm($ra), $rb", pattern,
+            itin>;
+            
+def SW : F8_InstWrapper<0x35, "l.sw", [(store GPR:$rb (addrimm GPR:$ra, i16imm:$imm))]>;
+def SB : F8_InstWrapper<0x36, "l.sb", [(truncstorei8 GPR:$rb (addrimm GPR:$ra, i16imm:$imm))]>;
+def SH : F8_InstWrapper<0x37, "l.sh", [(truncstorei16 GPR:$rb (addrimm GPR:$ra, i16imm:$imm))]>;
+
+//===----------------------------------------------------------------------===//
+// Format 9 - Conditional set-flag instructions
+//===----------------------------------------------------------------------===//
+class F9_InstWrapper<bits<11> opcode,
+                     string opcodeAsm, SDPatternOperator opNode,
+                     InstrItinClass itin = NoItinerary> :
+    F9_Inst<opcode,
+            (outs SR:$flag), (ins GPR:$ra, GPR:$rb),
+            opcodeAsm#" $ra, $rb", [(set SR:$sr (opNode GPR:$ra, GPR:$rb))],
+            itin>;
+
+def SFEQ  : F9_InstWrapper<0x720, "l.sfeq", seteq>;
+def SFNE  : F9_InstWrapper<0x721, "l.sfne", setne>;
+def SFGTU : F9_InstWrapper<0x722, "l.sfgtu", setugt>;
+def SFGEU : F9_InstWrapper<0x723, "l.sfgeu", setuge>;
+def SFLTU : F9_InstWrapper<0x724, "l.sfltu", setult>;
+def SFLEU : F9_InstWrapper<0x725, "l.sfleu", setule>;
+def SFGTS : F9_InstWrapper<0x72a, "l.sfgts", setgt>;
+def SFGES : F9_InstWrapper<0x72b, "l.sfges", setge>;
+def SFLTS : F9_InstWrapper<0x72c, "l.sflts", setlt>;
+def SFLES : F9_InstWrapper<0x72d, "l.sfles", setle>;
+
+//===----------------------------------------------------------------------===//
+// Format 10 - Move to/from special purpose registers instructions
+//===----------------------------------------------------------------------===//
+class F10_InstWrapper<bits<6> opcode,
+                     string opcodeAsm, list<dag> pattern,
+                     InstrItinClass itin = NoItinerary> :
+    F10_Inst<opcode,
+            (outs), (ins GPR:$ra, GPR:$rb, i16imm:$imm),
+            opcodeAsm#" $ra, $rb, $imm", pattern,
+            itin>;
+
+def MFSPR : F10_InstWrapper<0x2d, "l.mfspr", []>;
+def MTSPR : F10_InstWrapper<0x30, "l.mtspr", []>;
+
+//===----------------------------------------------------------------------===//
+// Format 11 - "Move Immediate High" instruction
+//===----------------------------------------------------------------------===//
+class F11_InstWrapper<bits<6> opcode1, bits<1> opcode2,
+                     string opcodeAsm, list<dag> pattern,
+                     InstrItinClass itin = NoItinerary> :
+    F11_Inst<opcode1, opcode2,
+            (outs GPR:$rd), (ins uimm16hi:$imm),
+            opcodeAsm#" $rd, $imm", pattern,
+            itin>;
+
+def MOVHI : F11_InstWrapper<0x6, 0x0, "l.movhi", [(set GPR:$rd uimm16hi:$imm)]>;
+
+//===----------------------------------------------------------------------===//
+// Format 12 - "No Operation" instruction
+//===----------------------------------------------------------------------===//
+class F12_InstWrapper<bits<8> opcode,
+                     string opcodeAsm, list<dag> pattern,
+                     InstrItinClass itin = NoItinerary> :
+    F12_Inst<opcode,
+            (outs), (ins i16imm:$imm),
+            opcodeAsm#" $imm", pattern,
+            itin>;
+
+def NOP : F12_InstWrapper<0x15, "l.nop", []>;
+
+//===----------------------------------------------------------------------===//
+// Format 13 - "Return From Exception" instruction
+//===----------------------------------------------------------------------===//
+class F13_InstWrapper<bits<6> opcode,
+                     string opcodeAsm, list<dag> pattern,
+                     InstrItinClass itin = NoItinerary> :
+    F13_Inst<opcode,
             (outs), (ins),
             opcodeAsm, pattern,
             itin>;
 
-def RFE : F11_InstWrapper<0x9, "l.rfe", []>;
+def RFE : F13_InstWrapper<0x9, "l.rfe", []>;
 
 //===----------------------------------------------------------------------===//
-// Format 12 - "System Call" instruction
+// Format 14 - "System Call" instruction
 //===----------------------------------------------------------------------===//
-class F12_InstWrapper<bits<16> opcode,
+class F14_InstWrapper<bits<16> opcode,
                      string opcodeAsm, list<dag> pattern,
                      InstrItinClass itin = NoItinerary> :
-    F12_Inst<opcode,
-            (outs), (ins immOp:$imm),
+    F14_Inst<opcode,
+            (outs), (ins i16imm:$imm),
             opcodeAsm#" $imm", pattern,
             itin>;
 
-def SYS : F12_InstWrapper<0x2000, "l.sys", []>;
-
-//===----------------------------------------------------------------------===//
-// Format 13 - Load instructions
-//===----------------------------------------------------------------------===//
-class F13_InstWrapper<bits<6> opcode,
-                     string opcodeAsm, SDPatternOperator opNode, ComplexPattern addrOp, Operand memOp,
-                     InstrItinClass itin = NoItinerary> :
-    F13_Inst<opcode,
-            (outs GPR_Class:$rd), (ins GPR_Class:$ra, memOp:$imm),
-            opcodeAsm#" $rd, $imm($ra)", [(set GPR_Class:$rd, (opNode addrOp:$addr))],
-            itin>;
-
-def LWZ   : F13_InstWrapper<0x21, "l.lwz", load, addrOp, memOp>;
-def LWS   : F13_InstWrapper<0x22, "l.lws", load, addrOp, memOp>;
-def LBZ   : F13_InstWrapper<0x23, "l.lbz", zextloadi8, addrOp, memOp>;
-def LBS   : F13_InstWrapper<0x24, "l.lbs", sextloadi8, addrOp, memOp>>;
-def LHZ   : F13_InstWrapper<0x25, "l.lhz", sextloadi16, addrOp, memOp>>;
-def LHS   : F13_InstWrapper<0x26, "l.lhs", sextloadi16, addrOp, memOp>>;
-
-//===----------------------------------------------------------------------===//
-// Format 14 - Move to/from special purpose registers instructions
-//===----------------------------------------------------------------------===//
-class F13_InstWrapper<bits<6> opcode,
-                     string opcodeAsm, list<dag> pattern,
-                     InstrItinClass itin = NoItinerary> :
-    F13_Inst<opcode,
-            (outs), (ins GPR_Class:$ra, GPR_Class:$rb, immOp:$imm),
-            opcodeAsm#" $ra, $rb, $imm", pattern,
-            itin>;
-
-def MFSPR : F14_InstWrapper<0x2d, "l.mfspr", []>;
-def MTSPR : F14_InstWrapper<0x30, "l.mtspr", []>;
+def SYS : F14_InstWrapper<0x2000, "l.sys", []>;
