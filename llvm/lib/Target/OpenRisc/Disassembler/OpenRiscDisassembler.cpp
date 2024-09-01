@@ -56,7 +56,7 @@ extern "C" LLVM_EXTERNAL_VISIBILITY void LLVMInitializeOpenRiscDisassembler() {
 }
 
 static const unsigned ARDecoderTable[] = {
-    OpenRisc::A0,  OpenRisc::SP,  OpenRisc::A2,  OpenRisc::A3, OpenRisc::A4,  OpenRisc::A5,
+    OpenRisc::A0,  OpenRisc::R1,  OpenRisc::A2,  OpenRisc::A3, OpenRisc::A4,  OpenRisc::A5,
     OpenRisc::A6,  OpenRisc::A7,  OpenRisc::A8,  OpenRisc::A9, OpenRisc::A10, OpenRisc::A11,
     OpenRisc::A12, OpenRisc::A13, OpenRisc::A14, OpenRisc::A15};
 

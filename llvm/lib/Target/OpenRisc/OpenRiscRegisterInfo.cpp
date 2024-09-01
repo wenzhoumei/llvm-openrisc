@@ -54,7 +54,7 @@ BitVector OpenRiscRegisterInfo::getReservedRegs(const MachineFunction &MF) const
   }
 
   // Reserve stack pointer.
-  Reserved.set(OpenRisc::SP);
+  Reserved.set(OpenRisc::R1);
   return Reserved;
 }
 
@@ -84,7 +84,7 @@ bool OpenRiscRegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
   // getFrameRegister() returns.
   unsigned FrameReg;
   if ((FrameIndex >= MinCSFI && FrameIndex <= MaxCSFI))
-    FrameReg = OpenRisc::SP;
+    FrameReg = OpenRisc::R1;
   else
     FrameReg = getFrameRegister(MF);
 
@@ -129,5 +129,5 @@ bool OpenRiscRegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
 
 Register OpenRiscRegisterInfo::getFrameRegister(const MachineFunction &MF) const {
   const TargetFrameLowering *TFI = MF.getSubtarget().getFrameLowering();
-  return TFI->hasFP(MF) ? OpenRisc::A15 : OpenRisc::SP;
+  return TFI->hasFP(MF) ? OpenRisc::A15 : OpenRisc::R1;
 }

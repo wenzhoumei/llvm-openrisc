@@ -55,7 +55,7 @@ static MCInstPrinter *createOpenRiscMCInstPrinter(const Triple &TT,
 
 static MCRegisterInfo *createOpenRiscMCRegisterInfo(const Triple &TT) {
   MCRegisterInfo *X = new MCRegisterInfo();
-  InitOpenRiscMCRegisterInfo(X, OpenRisc::SP);
+  InitOpenRiscMCRegisterInfo(X, OpenRisc::R1);
   return X;
 }
 

@@ -39,7 +39,7 @@ void OpenRiscFrameLowering::emitPrologue(MachineFunction &MF,
   MachineFrameInfo &MFI = MF.getFrameInfo();
   MachineBasicBlock::iterator MBBI = MBB.begin();
   DebugLoc DL = MBBI != MBB.end() ? MBBI->getDebugLoc() : DebugLoc();
-  MCRegister SP = OpenRisc::SP;
+  MCRegister SP = OpenRisc::R1;
   MCRegister FP = TRI->getFrameRegister(MF);
   const MCRegisterInfo *MRI = MF.getContext().getRegisterInfo();
 
@@ -140,7 +140,7 @@ void OpenRiscFrameLowering::emitEpilogue(MachineFunction &MF,
   MachineBasicBlock::iterator MBBI = MBB.getLastNonDebugInstr();
   MachineFrameInfo &MFI = MF.getFrameInfo();
   DebugLoc DL = MBBI->getDebugLoc();
-  MCRegister SP = OpenRisc::SP;
+  MCRegister SP = OpenRisc::R1;
   MCRegister FP = TRI->getFrameRegister(MF);
 
   // if framepointer enabled, restore the stack pointer.
@@ -237,7 +237,7 @@ MachineBasicBlock::iterator OpenRiscFrameLowering::eliminateCallFramePseudoInstr
     if (I->getOpcode() == OpenRisc::ADJCALLSTACKDOWN)
       Amount = -Amount;
 
-    TII.adjustStackPtr(OpenRisc::SP, Amount, MBB, I);
+    TII.adjustStackPtr(OpenRisc::R1, Amount, MBB, I);
   }
 
   return MBB.erase(I);
