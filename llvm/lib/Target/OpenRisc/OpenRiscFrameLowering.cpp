@@ -204,7 +204,7 @@ bool OpenRiscFrameLowering::spillCalleeSavedRegisters(
     // is taken.
     Register Reg = CSI[i].getReg();
     bool IsA0AndRetAddrIsTaken =
-        (Reg == OpenRisc::A0) && MF->getFrameInfo().isReturnAddressTaken();
+        (Reg == OpenRisc::R0) && MF->getFrameInfo().isReturnAddressTaken();
     if (!IsA0AndRetAddrIsTaken)
       EntryBlock.addLiveIn(Reg);
 

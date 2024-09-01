@@ -30,7 +30,7 @@
 using namespace llvm;
 
 OpenRiscRegisterInfo::OpenRiscRegisterInfo(const OpenRiscSubtarget &STI)
-    : OpenRiscGenRegisterInfo(OpenRisc::A0), Subtarget(STI) {}
+    : OpenRiscGenRegisterInfo(OpenRisc::R0), Subtarget(STI) {}
 
 const uint16_t *
 OpenRiscRegisterInfo::getCalleeSavedRegs(const MachineFunction *MF) const {
@@ -47,7 +47,7 @@ BitVector OpenRiscRegisterInfo::getReservedRegs(const MachineFunction &MF) const
   BitVector Reserved(getNumRegs());
   const TargetFrameLowering *TFI = MF.getSubtarget().getFrameLowering();
 
-  Reserved.set(OpenRisc::A0);
+  Reserved.set(OpenRisc::R0);
   if (TFI->hasFP(MF)) {
     // Reserve frame pointer.
     Reserved.set(getFrameRegister(MF));
@@ -129,5 +129,5 @@ bool OpenRiscRegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
 
 Register OpenRiscRegisterInfo::getFrameRegister(const MachineFunction &MF) const {
   const TargetFrameLowering *TFI = MF.getSubtarget().getFrameLowering();
-  return TFI->hasFP(MF) ? OpenRisc::A15 : OpenRisc::R1;
+  return TFI->hasFP(MF) ? OpenRisc::R15 : OpenRisc::R1;
 }

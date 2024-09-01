@@ -56,9 +56,13 @@ extern "C" LLVM_EXTERNAL_VISIBILITY void LLVMInitializeOpenRiscDisassembler() {
 }
 
 static const unsigned GPRDecoderTable[] = {
-    OpenRisc::A0,  OpenRisc::R1,  OpenRisc::A2,  OpenRisc::A3, OpenRisc::A4,  OpenRisc::A5,
-    OpenRisc::A6,  OpenRisc::A7,  OpenRisc::A8,  OpenRisc::A9, OpenRisc::A10, OpenRisc::A11,
-    OpenRisc::A12, OpenRisc::A13, OpenRisc::A14, OpenRisc::A15};
+    OpenRisc::R0,  OpenRisc::R1,  OpenRisc::R2,  OpenRisc::R3,  OpenRisc::R4,  OpenRisc::R5,
+    OpenRisc::R6,  OpenRisc::R7,  OpenRisc::R8,  OpenRisc::R9,  OpenRisc::R10, OpenRisc::R11,
+    OpenRisc::R12, OpenRisc::R13, OpenRisc::R14, OpenRisc::R15, OpenRisc::R16, OpenRisc::R17,
+    OpenRisc::R18, OpenRisc::R19, OpenRisc::R20, OpenRisc::R21, OpenRisc::R22, OpenRisc::R23,
+    OpenRisc::R24, OpenRisc::R25, OpenRisc::R26, OpenRisc::R27, OpenRisc::R28, OpenRisc::R29,
+    OpenRisc::R30, OpenRisc::R31
+};
 
 static DecodeStatus DecodeGPRRegisterClass(MCInst &Inst, uint64_t RegNo,
                                           uint64_t Address,
