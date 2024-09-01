@@ -15,7 +15,6 @@
 
 #include "OpenRiscTargetMachine.h"
 #include "llvm/CodeGen/AsmPrinter.h"
-#include "llvm/CodeGen/MachineConstantPool.h"
 #include "llvm/Support/Compiler.h"
 
 namespace llvm {
@@ -35,14 +34,6 @@ public:
 
   StringRef getPassName() const override { return "OpenRisc Assembly Printer"; }
   void emitInstruction(const MachineInstr *MI) override;
-
-  void emitConstantPool() override;
-
-  void emitMachineConstantPoolEntry(const MachineConstantPoolEntry &CPE, int i);
-
-  void emitMachineConstantPoolValue(MachineConstantPoolValue *MCPV) override;
-
-  MCSymbol *GetConstantPoolIndexSymbol(const MachineOperand &MO) const;
 
   MCSymbol *GetJumpTableSymbol(const MachineOperand &MO) const;
 

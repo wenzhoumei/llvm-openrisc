@@ -14,7 +14,6 @@
 
 #include "OpenRiscInstrInfo.h"
 #include "OpenRiscTargetMachine.h"
-#include "llvm/CodeGen/MachineConstantPool.h"
 #include "llvm/CodeGen/MachineFrameInfo.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
@@ -170,14 +169,8 @@ void OpenRiscInstrInfo::loadImmediate(MachineBasicBlock &MBB,
     BuildMI(MBB, MBBI, DL, get(OpenRisc::ADDMI), *Reg).addReg(*Reg).addImm(High);
   } else if (Value >= -4294967296LL && Value <= 4294967295LL) {
     // 32 bit arbitrary constant
-    MachineConstantPool *MCP = MBB.getParent()->getConstantPool();
-    uint64_t UVal = ((uint64_t)Value) & 0xFFFFFFFFLL;
-    const Constant *CVal = ConstantInt::get(
-        Type::getInt32Ty(MBB.getParent()->getFunction().getContext()), UVal,
-        false);
-    unsigned Idx = MCP->getConstantPoolIndex(CVal, Align(2U));
-    //	MCSymbol MSym
-    BuildMI(MBB, MBBI, DL, get(OpenRisc::L32R), *Reg).addConstantPoolIndex(Idx);
+    // TODO: Implement a constant pool
+    report_fatal_error("Currently unsupported load immediate value due to lack of implementing a constant pool");
   } else {
     // use L32R to let assembler load immediate best
     // TODO replace to L32R

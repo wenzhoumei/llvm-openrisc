@@ -16,7 +16,6 @@ add_public_tablegen_target(OpenRiscCommonTableGen)
 
 add_llvm_target(OpenRiscCodeGen
   OpenRiscAsmPrinter.cpp
-  OpenRiscConstantPoolValue.cpp
   OpenRiscFrameLowering.cpp
   OpenRiscInstrInfo.cpp
   OpenRiscISelDAGToDAG.cpp

@@ -12,7 +12,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "OpenRiscISelLowering.h"
-#include "OpenRiscConstantPoolValue.h"
 #include "OpenRiscSubtarget.h"
 #include "OpenRiscTargetMachine.h"
 #include "llvm/CodeGen/CallingConvLower.h"
@@ -276,17 +275,7 @@ OpenRiscTargetLowering::LowerCall(CallLoweringInfo &CLI,
   }
 
   if ((!name.empty()) && isLongCall(name.c_str())) {
-    // Create a constant pool entry for the callee address
-    OpenRiscCP::OpenRiscCPModifier Modifier = OpenRiscCP::no_modifier;
-
-    OpenRiscConstantPoolValue *CPV = OpenRiscConstantPoolSymbol::Create(
-        *DAG.getContext(), name.c_str(), 0 /* OpenRiscCLabelIndex */, false,
-        Modifier);
-
-    // Get the address of the callee into a register
-    SDValue CPAddr = DAG.getTargetConstantPool(CPV, PtrVT, Align(4), 0, TF);
-    SDValue CPWrap = getAddrPCRel(CPAddr, DAG);
-    Callee = CPWrap;
+    // TODO: Create a constant pool entry for the callee address
   }
 
   // The first call operand is the chain and the second is the target address.
