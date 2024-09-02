@@ -43,18 +43,17 @@ void OpenRiscFrameLowering::emitPrologue(MachineFunction &MF,
   MCRegister FP = TRI->getFrameRegister(MF);
   const MCRegisterInfo *MRI = MF.getContext().getRegisterInfo();
 
-  // First, compute final stack size.
-  uint64_t StackSize = MFI.getStackSize();
+  uint64_t StackSize = MFI.getStackSize(); // Amount of stack memory required to be allocated for function
   uint64_t PrevStackSize = StackSize;
 
-  // Round up StackSize to 16*N
-  StackSize += (16 - StackSize) & 0xf;
+  // Round up StackSize to 4*N to fit 4 byte alignment
+  StackSize += (4 - StackSize) & 0x3;
 
-  // No need to allocate space on the stack.
+  // If no need to adjust stack pointer
   if (StackSize == 0 && !MFI.adjustsStack())
     return;
 
-  // Adjust stack.
+  // Emit machine instruction to adjust stack pointer
   TII.adjustStackPtr(SP, -StackSize, MBB, MBBI);
 
   // emit ".cfi_def_cfa_offset StackSize"
@@ -106,9 +105,9 @@ void OpenRiscFrameLowering::emitPrologue(MachineFunction &MF,
     }
   }
 
-  // if framepointer enabled, set it to point to the stack pointer.
+  // If framepointer enabled
   if (hasFP(MF)) {
-    // Insert instruction "move $fp, $sp" at this location.
+    // Emit instruction to copy value in stack pointer register to frame pointer register
     BuildMI(MBB, MBBI, DL, TII.get(OpenRisc::OR), FP)
         .addReg(SP)
         .addReg(SP)
@@ -121,6 +120,7 @@ void OpenRiscFrameLowering::emitPrologue(MachineFunction &MF,
         .addCFIIndex(CFIIndex);
   }
 
+  // Adjust offsets of any objects affected by resize
   if (StackSize != PrevStackSize) {
     MFI.setStackSize(StackSize);
 
@@ -177,6 +177,7 @@ void OpenRiscFrameLowering::emitEpilogue(MachineFunction &MF,
 #endif
     }
 
+    // Emit instruction to restore the stack pointer
     BuildMI(MBB, I, DL, TII.get(OpenRisc::OR), SP).addReg(FP).addReg(FP);
   }
 
@@ -186,33 +187,29 @@ void OpenRiscFrameLowering::emitEpilogue(MachineFunction &MF,
   if (!StackSize)
     return;
 
-  // Adjust stack.
+  // Adjust stack (pop stack frame off stack)
   TII.adjustStackPtr(SP, StackSize, MBB, MBBI);
 }
 
 bool OpenRiscFrameLowering::spillCalleeSavedRegisters(
     MachineBasicBlock &MBB, MachineBasicBlock::iterator MI,
     ArrayRef<CalleeSavedInfo> CSI, const TargetRegisterInfo *TRI) const {
+  // If there was nothing saved, there is no need to do anything
+  if (CSI.empty())
+    return true;
+
   MachineFunction *MF = MBB.getParent();
-  MachineBasicBlock &EntryBlock = *(MF->begin());
+  const TargetInstrInfo &TII = *MF->getSubtarget().getInstrInfo();
+  DebugLoc DL;
+  if (MI != MBB.end() && !MI->isDebugInstr())
+    DL = MI->getDebugLoc();
 
-  for (unsigned i = 0, e = CSI.size(); i != e; ++i) {
-    // Add the callee-saved register as live-in. Do not add if the register is
-    // A0 and return address is taken, because it will be implemented in
-    // method OpenRiscTargetLowering::LowerRETURNADDR.
-    // It's killed at the spill, unless the register is RA and return address
-    // is taken.
-    Register Reg = CSI[i].getReg();
-    bool IsA0AndRetAddrIsTaken =
-        (Reg == OpenRisc::R0) && MF->getFrameInfo().isReturnAddressTaken();
-    if (!IsA0AndRetAddrIsTaken)
-      EntryBlock.addLiveIn(Reg);
-
+  for (auto &CS : CSI) {
     // Insert the spill to the stack frame.
-    bool IsKill = !IsA0AndRetAddrIsTaken;
+    Register Reg = CS.getReg();
     const TargetRegisterClass *RC = TRI->getMinimalPhysRegClass(Reg);
-    TII.storeRegToStackSlot(EntryBlock, MI, Reg, IsKill, CSI[i].getFrameIdx(),
-                            RC, TRI, Register());
+    TII.storeRegToStackSlot(MBB, MI, Reg, true, CS.getFrameIdx(), RC, TRI,
+                            Register());
   }
 
   return true;
@@ -221,7 +218,12 @@ bool OpenRiscFrameLowering::spillCalleeSavedRegisters(
 bool OpenRiscFrameLowering::restoreCalleeSavedRegisters(
     MachineBasicBlock &MBB, MachineBasicBlock::iterator MI,
     MutableArrayRef<CalleeSavedInfo> CSI, const TargetRegisterInfo *TRI) const {
-  return TargetFrameLowering::restoreCalleeSavedRegisters(MBB, MI, CSI, TRI);
+  // If no instructions to restore, don't do anything
+  if (CSI.empty())
+    return true;
+  
+  // Otherwise by default it restores with a series of OpenRiscInstrInfo::loadRegFromStackSlot
+  return false;
 }
 
 // Eliminate ADJCALLSTACKDOWN, ADJCALLSTACKUP pseudo instructions
@@ -250,24 +252,7 @@ void OpenRiscFrameLowering::determineCalleeSaves(MachineFunction &MF,
 
   TargetFrameLowering::determineCalleeSaves(MF, SavedRegs, RS);
 
-  // Mark $fp as used if function has dedicated frame pointer.
+  // If using frame pointer, it is marked as callee saved
   if (hasFP(MF))
     SavedRegs.set(FP);
-}
-
-void OpenRiscFrameLowering::processFunctionBeforeFrameFinalized(
-    MachineFunction &MF, RegScavenger *RS) const {
-  // Set scavenging frame index if necessary.
-  MachineFrameInfo &MFI = MF.getFrameInfo();
-  uint64_t MaxSPOffset = MFI.estimateStackSize(MF);
-
-  if (isInt<12>(MaxSPOffset))
-    return;
-
-  const TargetRegisterClass &RC = OpenRisc::GPRRegClass;
-  unsigned Size = TRI->getSpillSize(RC);
-  Align Alignment = TRI->getSpillAlign(RC);
-  int FI = MF.getFrameInfo().CreateStackObject(Size, Alignment, false);
-
-  RS->addScavengingFrameIndex(FI);
 }
