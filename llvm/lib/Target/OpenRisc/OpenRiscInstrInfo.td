@@ -240,10 +240,10 @@ def SYS : F14_InstWrapper<0x2000, "l.sys", []>;
 // a stack adjustment and the codegen must know that they may modify the stack
 // pointer before prolog-epilog rewriting occurs.
 let Defs = [SP], Uses = [SP] in {
-  def ADJCALLSTACKDOWN : Pseudo<(outs), (ins i32imm:$amt1, i32imm:$amt2),
+  def ADJCALLSTACKDOWN : Pseudo<(outs), (ins i32imm:$ra, i32imm:$rb),
                                "#ADJCALLSTACKDOWN",
-                               [(OpenRisc_callseq_start timm:$amt1, timm:$amt2)]>;
+                               [(OpenRisc_callseq_start timm:$ra, timm:$rb)]>;
   def ADJCALLSTACKUP   : Pseudo<(outs), (ins i32imm:$amt1, i32imm:$amt2),
                                "#ADJCALLSTACKUP",
-                               [(OpenRisc_callseq_end timm:$amt1, timm:$amt2)]>;
+                               [(OpenRisc_callseq_end timm:$ra, timm:$rb)]>;
 }
