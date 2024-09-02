@@ -93,7 +93,7 @@ class F5_InstWrapper<bits<5> opcode,
             itin>;
 
 def JR   : F5_InstWrapper<0x11, "l.jr", [(brind GPR:$rb)]>;
-def JALR : F5_InstWrapper<0x12, "l.jalr", [(OpenRisc_Call GPR:$rb)]>;
+def JALR : F5_InstWrapper<0x12, "l.jalr", [(OpenRisc_call GPR:$rb)]>;
 
 //===----------------------------------------------------------------------===//
 // Format 6  - Jumps and branch instructions with immediate
@@ -107,7 +107,7 @@ class F6_InstWrapper<bits<6> opcode,
             itin>;
 
 def J   : F6_InstWrapper<0x0, "l.j", [(br tglobaladdr:$imm)]>;
-def JAL : F6_InstWrapper<0x1, "l.jal", [(OpenRisc_Call tglobaladdr:$imm)]>;
+def JAL : F6_InstWrapper<0x1, "l.jal", [(OpenRisc_call tglobaladdr:$imm)]>;
 def BNF : F6_InstWrapper<0x3, "l.bnf", []>;
 def BF  : F6_InstWrapper<0x4, "l.bf", []>;
 
@@ -231,3 +231,19 @@ class F14_InstWrapper<bits<16> opcode,
             itin>;
 
 def SYS : F14_InstWrapper<0x2000, "l.sys", []>;
+
+//===----------------------------------------------------------------------===//
+// Stack allocation
+//===----------------------------------------------------------------------===//
+
+// ADJCALLSTACKDOWN/UP implicitly use/def SP because they may be expanded into
+// a stack adjustment and the codegen must know that they may modify the stack
+// pointer before prolog-epilog rewriting occurs.
+let Defs = [SP], Uses = [SP] in {
+  def ADJCALLSTACKDOWN : Pseudo<(outs), (ins i32imm:$amt1, i32imm:$amt2),
+                               "#ADJCALLSTACKDOWN",
+                               [(OpenRisc_callseq_start timm:$amt1, timm:$amt2)]>;
+  def ADJCALLSTACKUP   : Pseudo<(outs), (ins i32imm:$amt1, i32imm:$amt2),
+                               "#ADJCALLSTACKUP",
+                               [(OpenRisc_callseq_end timm:$amt1, timm:$amt2)]>;
+}
