@@ -102,7 +102,7 @@ def EVBAR : SPR<0, 11, "EVBAR">;  // Exception vector base address register
 def AECR : SPR<0, 12, "AECR">;  // Arithmetic Exception Control Register
 def AESR : SPR<0, 13, "AESR">;  // Arithmetic Exception Status Register
 def NPC : SPR<0, 16, "NPC">;  // Next PC register
-def SR : SPR<0, 17, "SR">;    // Supervision register
+def SRReg : SPR<0, 17, "SR">;    // Supervision register
 def PPC : SPR<0, 18, "PPC">;  // Previous PC register
 def FPCSR : SPR<0, 20, "FPCSR">;  // FP Control Status register
 
@@ -138,7 +138,7 @@ def GPR : RegisterClass<"OpenRisc", [i32], 32, (add
   R26, R28, R30, R15, R17, R19, R21, R23, 
   R25, R27, R29, R31, R1, R2, R0)>;
 
-def SR : RegisterClass<"OpenRisc", [i32], 32, (add SR)>;
+def SR : RegisterClass<"OpenRisc", [i32], 32, (add SRReg)>;
 
 // Register class for EPCR registers
 def EPCR : RegisterClass<"OpenRisc", [i32], 32, 

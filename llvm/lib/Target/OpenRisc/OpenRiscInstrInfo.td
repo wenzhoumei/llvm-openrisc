@@ -118,15 +118,15 @@ class F7_InstWrapper<bits<6> opcode,
                      string opcodeAsm, SDPatternOperator opNode, Operand memOp,
                      InstrItinClass itin = NoItinerary> :
     F7_Inst<opcode,
-            (outs GPR:$rd), (ins GPR:$ra, memOp:$imm),
-            opcodeAsm#" $rd, $imm($ra)", [(set GPR:$rd, (addrimm GPR:$ra, i16imm:$imm))], /* https://vscode.dev/github.com/wenzhoumei/llvm-openrisc/blob/main/llvm/lib/Target/RISCV/RISCVInstrInfo.td#L1708 */
+            (outs GPR:$rd), (ins memri:$addr),
+            opcodeAsm#" $rd, $imm($ra)", [(set GPR:$rd, (opNode addrimm:$addr))], /* https://vscode.dev/github.com/wenzhoumei/llvm-openrisc/blob/main/llvm/lib/Target/RISCV/RISCVInstrInfo.td#L1708 */
             itin>;
 
-def LWZ   : F7_InstWrapper<0x21, "l.lwz", load, mem32>;
-def LWS   : F7_InstWrapper<0x22, "l.lws", load, mem32>;
-def LBZ   : F7_InstWrapper<0x23, "l.lbz", zextloadi8, mem8>;
-def LBS   : F7_InstWrapper<0x24, "l.lbs", sextloadi8, mem8>;
-def LHZ   : F7_InstWrapper<0x25, "l.lhz", sextloadi16, mem16>;
+def LWZ   : F7_InstWrapper<0x21, "l.lwz", load>;
+def LWS   : F7_InstWrapper<0x22, "l.lws", load>;
+def LBZ   : F7_InstWrapper<0x23, "l.lbz", zextloadi8>;
+def LBS   : F7_InstWrapper<0x24, "l.lbs", sextloadi8>;
+def LHZ   : F7_InstWrapper<0x25, "l.lhz", sextloadi16>;
 def LHS   : F7_InstWrapper<0x26, "l.lhs", sextloadi16, mem16>;
 
 //===----------------------------------------------------------------------===//

@@ -61,7 +61,8 @@ Register OpenRiscInstrInfo::isLoadFromStackSlot(const MachineInstr &MI,
 
 Register OpenRiscInstrInfo::isStoreToStackSlot(const MachineInstr &MI,
                                              int &FrameIndex) const {
-  if (MI.getOpcode() == OpenRisc::S32I) {
+  // If machine instruction is storing a word
+  if (MI.getOpcode() == OpenRisc::SW) {
     if (MI.getOperand(1).isFI() && MI.getOperand(2).isImm() &&
         MI.getOperand(2).getImm() == 0) {
       FrameIndex = MI.getOperand(1).getIndex();
@@ -71,7 +72,7 @@ Register OpenRiscInstrInfo::isStoreToStackSlot(const MachineInstr &MI,
   return Register();
 }
 
-/// Adjust SP by Amount bytes.
+// Adjust SP by Amount bytes.
 void OpenRiscInstrInfo::adjustStackPtr(unsigned SP, int64_t Amount,
                                      MachineBasicBlock &MBB,
                                      MachineBasicBlock::iterator I) const {
@@ -86,12 +87,13 @@ void OpenRiscInstrInfo::adjustStackPtr(unsigned SP, int64_t Amount,
   // create virtual reg to store immediate
   unsigned Reg = RegInfo.createVirtualRegister(RC);
 
-  if (isInt<8>(Amount)) { // addi sp, sp, amount
-    BuildMI(MBB, I, DL, get(OpenRisc::ADDI), Reg).addReg(SP).addImm(Amount);
-  } else { // Expand immediate that doesn't fit in 8-bit.
+  // If immediate is 16-bit, directly add it to stack pointer
+  if (isInt<16>(Amount)) { // addi sp, sp, amount
+    BuildMI(MBB, I, DL, get(OpenRisc::ADDI), Reg).addReg(SP).addImm(-Amount);
+  } else { // Expand immediate that doesn't fit in 16-bit.
     unsigned Reg1;
     loadImmediate(MBB, I, &Reg1, Amount);
-    BuildMI(MBB, I, DL, get(OpenRisc::ADD), Reg)
+    BuildMI(MBB, I, DL, get(OpenRisc::SUB), Reg)
         .addReg(SP)
         .addReg(Reg1, RegState::Kill);
   }
