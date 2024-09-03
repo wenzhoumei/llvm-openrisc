@@ -87,24 +87,24 @@ class SPR<bits<5> group, bits<11> num, string n> : OpenRiscReg<n> {
 }
 
 // Group 0: System Control and Status registers
-def VR : SPR<0, 0, "VR">;     // Version register
-def UPR : SPR<0, 1, "UPR">;   // Unit Present register
-def CPUCFGR : SPR<0, 2, "CPUCFGR">;  // CPU Configuration register
-def DMMUCFGR : SPR<0, 3, "DMMUCFGR">;  // Data MMU Configuration register
-def IMMUCFGR : SPR<0, 4, "IMMUCFGR">;  // Instruction MMU Configuration register
-def DCCFGR : SPR<0, 5, "DCCFGR">;  // Data Cache Configuration register
-def ICCFGR : SPR<0, 6, "ICCFGR">;  // Instruction Cache Configuration register
-def DCFGR : SPR<0, 7, "DCFGR">;  // Debug Configuration register
-def PCCFGR : SPR<0, 8, "PCCFGR">;  // Performance Counters Configuration register
-def VR2 : SPR<0, 9, "VR2">;   // Version register 2
-def AVR : SPR<0, 10, "AVR">;  // Architecture version register
-def EVBAR : SPR<0, 11, "EVBAR">;  // Exception vector base address register
-def AECR : SPR<0, 12, "AECR">;  // Arithmetic Exception Control Register
-def AESR : SPR<0, 13, "AESR">;  // Arithmetic Exception Status Register
-def NPC : SPR<0, 16, "NPC">;  // Next PC register
+def VRReg: SPR<0, 0, "VR">;     // Version register
+def UPRReg: SPR<0, 1, "UPR">;   // Unit Present register
+def CPUCFGRReg: SPR<0, 2, "CPUCFGR">;  // CPU Configuration register
+def DMMUCFGRReg: SPR<0, 3, "DMMUCFGR">;  // Data MMU Configuration register
+def IMMUCFGRReg: SPR<0, 4, "IMMUCFGR">;  // Instruction MMU Configuration register
+def DCCFGRReg: SPR<0, 5, "DCCFGR">;  // Data Cache Configuration register
+def ICCFGRReg: SPR<0, 6, "ICCFGR">;  // Instruction Cache Configuration register
+def DCFGRReg: SPR<0, 7, "DCFGR">;  // Debug Configuration register
+def PCCFGRReg: SPR<0, 8, "PCCFGR">;  // Performance Counters Configuration register
+def VR2Reg : SPR<0, 9, "VR2">;   // Version register 2
+def AVRReg: SPR<0, 10, "AVR">;  // Architecture version register
+def EVBARReg: SPR<0, 11, "EVBAR">;  // Exception vector base address register
+def AECRReg: SPR<0, 12, "AECR">;  // Arithmetic Exception Control Register
+def AESRReg: SPR<0, 13, "AESR">;  // Arithmetic Exception Status Register
+def NPCReg : SPR<0, 16, "NPC">;  // Next PC register
 def SRReg : SPR<0, 17, "SR">;    // Supervision register
-def PPC : SPR<0, 18, "PPC">;  // Previous PC register
-def FPCSR : SPR<0, 20, "FPCSR">;  // FP Control Status register
+def PPCReg : SPR<0, 18, "PPC">;  // Previous PC register
+def FPCSRReg: SPR<0, 20, "FPCSR">;  // FP Control Status register
 
 // Exception PC, EA, and SR registers (0-15)
 foreach i = 0-15 in {
