@@ -33,8 +33,8 @@ def uimm5 : Immediate<i32, [{ return isUInt<5>(Imm); }], "Imm5_AsmOperand">;
 // Memory address operands
 //===----------------------------------------------------------------------===//
 /// https://vscode.dev/github/wenzhoumei/llvm-openrisc/blob/main/llvm/lib/Target/Xtensa/XtensaOperands.td#L139
-class memri : Operand<i32> {
-  let MIOperandInfo = (ops GPR, offset);
+def memri : Operand<i32> {
+  let MIOperandInfo = (ops GPR:$ra, i16imm:$imm);
   let EncoderMethod = "getMemRegEncoding";
   let OperandType = "OPERAND_MEMORY";
   let PrintMethod = "printMemOperand";

@@ -286,3 +286,13 @@ class F14_Inst<bits<16> opcode,
   let Inst{31-16} = opcode;
   let Inst{15-0}  = imm;
 }
+
+
+//===----------------------------------------------------------------------===//
+// Pseudo instructions
+//===----------------------------------------------------------------------===//
+class Pseudo_Inst<dag outs, dag ins, string asmstr, list<dag> pattern>
+  : OpenRisc_Inst<outs, ins, asmstr, pattern> {
+  let isPseudo = 1;
+  let isCodeGenOnly = 1;
+}
