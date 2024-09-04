@@ -233,7 +233,7 @@ class F14_InstWrapper<bits<16> opcode,
 def SYS : F14_InstWrapper<0x2000, "l.sys", []>;
 
 //===----------------------------------------------------------------------===//
-// Call matching
+// Calls
 //===----------------------------------------------------------------------===//
 let isReturn = 1, isTerminator = 1,
     isBarrier = 1, Uses = [R9] in {
