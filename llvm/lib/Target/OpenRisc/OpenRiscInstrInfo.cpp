@@ -49,7 +49,7 @@ OpenRiscInstrInfo::OpenRiscInstrInfo(const OpenRiscSubtarget &STI)
 
 Register OpenRiscInstrInfo::isLoadFromStackSlot(const MachineInstr &MI,
                                               int &FrameIndex) const {
-  if (MI.getOpcode() == OpenRisc::L32I) {
+  if (MI.getOpcode() == OpenRisc::LWS) {
     if (MI.getOperand(1).isFI() && MI.getOperand(2).isImm() &&
         MI.getOperand(2).getImm() == 0) {
       FrameIndex = MI.getOperand(1).getIndex();
@@ -148,8 +148,8 @@ void OpenRiscInstrInfo::getLoadStoreOpcodes(const TargetRegisterClass *RC,
   assert((RC == &OpenRisc::GPRRegClass) &&
          "Unsupported regclass to load or store");
 
-  LoadOpcode = OpenRisc::L32I;
-  StoreOpcode = OpenRisc::S32I;
+  LoadOpcode = OpenRisc::LWS;
+  StoreOpcode = OpenRisc::SW;
 }
 
 void OpenRiscInstrInfo::loadImmediate(MachineBasicBlock &MBB,
@@ -161,21 +161,20 @@ void OpenRiscInstrInfo::loadImmediate(MachineBasicBlock &MBB,
 
   // create virtual reg to store immediate
   *Reg = RegInfo.createVirtualRegister(RC);
-  if (Value >= -2048 && Value <= 2047) {
-    BuildMI(MBB, MBBI, DL, get(OpenRisc::MOVI), *Reg).addImm(Value);
-  } else if (Value >= -32768 && Value <= 32767) {
-    int Low = Value & 0xFF;
-    int High = Value & ~0xFF;
+  if (Value >= -32768 && Value <= 32767) { // if 16 bits
+    // Use ADDI with zero register (R0) as the source
+    BuildMI(MBB, MBBI, DL, get(OpenRisc::ADDI), *Reg)
+        .addReg(OpenRisc::R0)    // R0 as the source register
+        .addImm(Value);          // imm16 immediate value
+  } else if (Value >= -4294967296LL && Value <= 4294967295LL) {// 32 bit arbitrary constant
 
-    BuildMI(MBB, MBBI, DL, get(OpenRisc::MOVI), *Reg).addImm(Low);
-    BuildMI(MBB, MBBI, DL, get(OpenRisc::ADDMI), *Reg).addReg(*Reg).addImm(High);
-  } else if (Value >= -4294967296LL && Value <= 4294967295LL) {
-    // 32 bit arbitrary constant
-    // TODO: Implement a constant pool
-    report_fatal_error("Currently unsupported load immediate value due to lack of implementing a constant pool");
+    int Low = Value & 0xFFFF;
+    int High = Value & ~0xFFFF;
+
+    BuildMI(MBB, MBBI, DL, get(OpenRisc::MOVHI), *Reg).addImm(High);
+    BuildMI(MBB, MBBI, DL, get(OpenRisc::ADDI), *Reg).addReg(*Reg).addImm(Low);
   } else {
-    // use L32R to let assembler load immediate best
-    // TODO replace to L32R
+    // TODO support values greater than 32 bits
     report_fatal_error("Unsupported load immediate value");
   }
 }

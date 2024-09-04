@@ -59,10 +59,6 @@ private:
                              SmallVectorImpl<MCFixup> &Fixups,
                              const MCSubtargetInfo &STI) const;
 
-  uint32_t getJumpTargetEncoding(const MCInst &MI, unsigned int OpNum,
-                                 SmallVectorImpl<MCFixup> &Fixups,
-                                 const MCSubtargetInfo &STI) const;
-
   uint32_t getBranchTargetEncoding(const MCInst &MI, unsigned int OpNum,
                                    SmallVectorImpl<MCFixup> &Fixups,
                                    const MCSubtargetInfo &STI) const;
@@ -71,49 +67,9 @@ private:
                            SmallVectorImpl<MCFixup> &Fixups,
                            const MCSubtargetInfo &STI) const;
 
-  uint32_t getL32RTargetEncoding(const MCInst &MI, unsigned OpNum,
-                                 SmallVectorImpl<MCFixup> &Fixups,
-                                 const MCSubtargetInfo &STI) const;
-
   uint32_t getMemRegEncoding(const MCInst &MI, unsigned OpNo,
                              SmallVectorImpl<MCFixup> &Fixups,
                              const MCSubtargetInfo &STI) const;
-
-  uint32_t getImm8OpValue(const MCInst &MI, unsigned OpNo,
-                          SmallVectorImpl<MCFixup> &Fixups,
-                          const MCSubtargetInfo &STI) const;
-
-  uint32_t getImm8_sh8OpValue(const MCInst &MI, unsigned OpNo,
-                              SmallVectorImpl<MCFixup> &Fixups,
-                              const MCSubtargetInfo &STI) const;
-
-  uint32_t getImm12OpValue(const MCInst &MI, unsigned OpNo,
-                           SmallVectorImpl<MCFixup> &Fixups,
-                           const MCSubtargetInfo &STI) const;
-
-  uint32_t getUimm4OpValue(const MCInst &MI, unsigned OpNo,
-                           SmallVectorImpl<MCFixup> &Fixups,
-                           const MCSubtargetInfo &STI) const;
-
-  uint32_t getUimm5OpValue(const MCInst &MI, unsigned OpNo,
-                           SmallVectorImpl<MCFixup> &Fixups,
-                           const MCSubtargetInfo &STI) const;
-
-  uint32_t getImm1_16OpValue(const MCInst &MI, unsigned OpNo,
-                             SmallVectorImpl<MCFixup> &Fixups,
-                             const MCSubtargetInfo &STI) const;
-
-  uint32_t getShimm1_31OpValue(const MCInst &MI, unsigned OpNo,
-                               SmallVectorImpl<MCFixup> &Fixups,
-                               const MCSubtargetInfo &STI) const;
-
-  uint32_t getB4constOpValue(const MCInst &MI, unsigned OpNo,
-                             SmallVectorImpl<MCFixup> &Fixups,
-                             const MCSubtargetInfo &STI) const;
-
-  uint32_t getB4constuOpValue(const MCInst &MI, unsigned OpNo,
-                              SmallVectorImpl<MCFixup> &Fixups,
-                              const MCSubtargetInfo &STI) const;
 };
 } // namespace
 
@@ -158,7 +114,7 @@ OpenRiscMCCodeEmitter::getMachineOpValue(const MCInst &MI, const MCOperand &MO,
 }
 
 uint32_t
-OpenRiscMCCodeEmitter::getJumpTargetEncoding(const MCInst &MI, unsigned int OpNum,
+OpenRiscMCCodeEmitter::getBranchTargetEncoding(const MCInst &MI, unsigned int OpNum,
                                            SmallVectorImpl<MCFixup> &Fixups,
                                            const MCSubtargetInfo &STI) const {
   const MCOperand &MO = MI.getOperand(OpNum);
@@ -170,29 +126,6 @@ OpenRiscMCCodeEmitter::getJumpTargetEncoding(const MCInst &MI, unsigned int OpNu
   Fixups.push_back(MCFixup::create(
       0, Expr, MCFixupKind(OpenRisc::fixup_openrisc_jump_18), MI.getLoc()));
   return 0;
-}
-
-uint32_t OpenRiscMCCodeEmitter::getBranchTargetEncoding(
-    const MCInst &MI, unsigned int OpNum, SmallVectorImpl<MCFixup> &Fixups,
-    const MCSubtargetInfo &STI) const {
-  const MCOperand &MO = MI.getOperand(OpNum);
-  if (MO.isImm())
-    return static_cast<uint32_t>(MO.getImm());
-
-  const MCExpr *Expr = MO.getExpr();
-  switch (MI.getOpcode()) {
-  case OpenRisc::BEQZ:
-  case OpenRisc::BGEZ:
-  case OpenRisc::BLTZ:
-  case OpenRisc::BNEZ:
-    Fixups.push_back(MCFixup::create(
-        0, Expr, MCFixupKind(OpenRisc::fixup_openrisc_branch_12), MI.getLoc()));
-    return 0;
-  default:
-    Fixups.push_back(MCFixup::create(
-        0, Expr, MCFixupKind(OpenRisc::fixup_openrisc_branch_8), MI.getLoc()));
-    return 0;
-  }
 }
 
 uint32_t
@@ -217,26 +150,6 @@ OpenRiscMCCodeEmitter::getCallEncoding(const MCInst &MI, unsigned int OpNum,
 }
 
 uint32_t
-OpenRiscMCCodeEmitter::getL32RTargetEncoding(const MCInst &MI, unsigned OpNum,
-                                           SmallVectorImpl<MCFixup> &Fixups,
-                                           const MCSubtargetInfo &STI) const {
-  const MCOperand &MO = MI.getOperand(OpNum);
-  if (MO.isImm()) {
-    int32_t Res = MO.getImm();
-    // We don't check first 2 bits, because in these bits we could store first 2
-    // bits of instruction address
-    Res >>= 2;
-    return Res;
-  }
-
-  assert((MO.isExpr()) && "Unexpected operand value!");
-
-  Fixups.push_back(MCFixup::create(
-      0, MO.getExpr(), MCFixupKind(OpenRisc::fixup_openrisc_l32r_16), MI.getLoc()));
-  return 0;
-}
-
-uint32_t
 OpenRiscMCCodeEmitter::getMemRegEncoding(const MCInst &MI, unsigned OpNo,
                                        SmallVectorImpl<MCFixup> &Fixups,
                                        const MCSubtargetInfo &STI) const {
@@ -245,21 +158,7 @@ OpenRiscMCCodeEmitter::getMemRegEncoding(const MCInst &MI, unsigned OpNo,
   uint32_t Res = static_cast<uint32_t>(MI.getOperand(OpNo + 1).getImm());
 
   switch (MI.getOpcode()) {
-  case OpenRisc::S16I:
-  case OpenRisc::L16SI:
-  case OpenRisc::L16UI:
-    if (Res & 0x1) {
-      report_fatal_error("Unexpected operand value!");
-    }
-    Res >>= 1;
-    break;
-  case OpenRisc::S32I:
-  case OpenRisc::L32I:
-    if (Res & 0x3) {
-      report_fatal_error("Unexpected operand value!");
-    }
-    Res >>= 2;
-    break;
+  // TODO: See if I need to do anything here
   }
   
   assert((isUInt<8>(Res)) && "Unexpected operand value!");
@@ -270,185 +169,4 @@ OpenRiscMCCodeEmitter::getMemRegEncoding(const MCInst &MI, unsigned OpNo,
   return ((OffBits & 0xFF0) | RegBits);
 }
 
-uint32_t OpenRiscMCCodeEmitter::getImm8OpValue(const MCInst &MI, unsigned OpNo,
-                                             SmallVectorImpl<MCFixup> &Fixups,
-                                             const MCSubtargetInfo &STI) const {
-  const MCOperand &MO = MI.getOperand(OpNo);
-  int32_t Res = MO.getImm();
-
-  assert(((Res >= -128) && (Res <= 127)) && "Unexpected operand value!");
-
-  return (Res & 0xff);
-}
-
-uint32_t
-OpenRiscMCCodeEmitter::getImm8_sh8OpValue(const MCInst &MI, unsigned OpNo,
-                                        SmallVectorImpl<MCFixup> &Fixups,
-                                        const MCSubtargetInfo &STI) const {
-  const MCOperand &MO = MI.getOperand(OpNo);
-  int32_t Res = MO.getImm();
-
-  assert(((Res >= -32768) && (Res <= 32512) && ((Res & 0xff) == 0)) &&
-         "Unexpected operand value!");
-
-  return (Res & 0xffff);
-}
-
-uint32_t
-OpenRiscMCCodeEmitter::getImm12OpValue(const MCInst &MI, unsigned OpNo,
-                                     SmallVectorImpl<MCFixup> &Fixups,
-                                     const MCSubtargetInfo &STI) const {
-  const MCOperand &MO = MI.getOperand(OpNo);
-  int32_t Res = MO.getImm();
-
-  assert(((Res >= -2048) && (Res <= 2047)) && "Unexpected operand value!");
-
-  return (Res & 0xfff);
-}
-
-uint32_t
-OpenRiscMCCodeEmitter::getUimm4OpValue(const MCInst &MI, unsigned OpNo,
-                                     SmallVectorImpl<MCFixup> &Fixups,
-                                     const MCSubtargetInfo &STI) const {
-  const MCOperand &MO = MI.getOperand(OpNo);
-  uint32_t Res = static_cast<uint32_t>(MO.getImm());
-
-  assert((Res <= 15) && "Unexpected operand value!");
-
-  return Res & 0xf;
-}
-
-uint32_t
-OpenRiscMCCodeEmitter::getUimm5OpValue(const MCInst &MI, unsigned OpNo,
-                                     SmallVectorImpl<MCFixup> &Fixups,
-                                     const MCSubtargetInfo &STI) const {
-  const MCOperand &MO = MI.getOperand(OpNo);
-  uint32_t Res = static_cast<uint32_t>(MO.getImm());
-
-  assert((Res <= 31) && "Unexpected operand value!");
-
-  return (Res & 0x1f);
-}
-
-uint32_t
-OpenRiscMCCodeEmitter::getShimm1_31OpValue(const MCInst &MI, unsigned OpNo,
-                                         SmallVectorImpl<MCFixup> &Fixups,
-                                         const MCSubtargetInfo &STI) const {
-  const MCOperand &MO = MI.getOperand(OpNo);
-  uint32_t Res = static_cast<uint32_t>(MO.getImm());
-
-  assert(((Res >= 1) && (Res <= 31)) && "Unexpected operand value!");
-
-  return ((32 - Res) & 0x1f);
-}
-
-uint32_t
-OpenRiscMCCodeEmitter::getImm1_16OpValue(const MCInst &MI, unsigned OpNo,
-                                       SmallVectorImpl<MCFixup> &Fixups,
-                                       const MCSubtargetInfo &STI) const {
-  const MCOperand &MO = MI.getOperand(OpNo);
-  uint32_t Res = static_cast<uint32_t>(MO.getImm());
-
-  assert(((Res >= 1) && (Res <= 16)) && "Unexpected operand value!");
-
-  return (Res - 1);
-}
-
-uint32_t
-OpenRiscMCCodeEmitter::getB4constOpValue(const MCInst &MI, unsigned OpNo,
-                                       SmallVectorImpl<MCFixup> &Fixups,
-                                       const MCSubtargetInfo &STI) const {
-  const MCOperand &MO = MI.getOperand(OpNo);
-  uint32_t Res = static_cast<uint32_t>(MO.getImm());
-
-  switch (Res) {
-  case 0xffffffff:
-    Res = 0;
-    break;
-  case 1:
-  case 2:
-  case 3:
-  case 4:
-  case 5:
-  case 6:
-  case 7:
-  case 8:
-    break;
-  case 10:
-    Res = 9;
-    break;
-  case 12:
-    Res = 10;
-    break;
-  case 16:
-    Res = 11;
-    break;
-  case 32:
-    Res = 12;
-    break;
-  case 64:
-    Res = 13;
-    break;
-  case 128:
-    Res = 14;
-    break;
-  case 256:
-    Res = 15;
-    break;
-  default:
-    llvm_unreachable("Unexpected operand value!");
-  }
-
-  return Res;
-}
-
-uint32_t
-OpenRiscMCCodeEmitter::getB4constuOpValue(const MCInst &MI, unsigned OpNo,
-                                        SmallVectorImpl<MCFixup> &Fixups,
-                                        const MCSubtargetInfo &STI) const {
-  const MCOperand &MO = MI.getOperand(OpNo);
-  uint32_t Res = static_cast<uint32_t>(MO.getImm());
-
-  switch (Res) {
-  case 32768:
-    Res = 0;
-    break;
-  case 65536:
-    Res = 1;
-    break;
-  case 2:
-  case 3:
-  case 4:
-  case 5:
-  case 6:
-  case 7:
-  case 8:
-    break;
-  case 10:
-    Res = 9;
-    break;
-  case 12:
-    Res = 10;
-    break;
-  case 16:
-    Res = 11;
-    break;
-  case 32:
-    Res = 12;
-    break;
-  case 64:
-    Res = 13;
-    break;
-  case 128:
-    Res = 14;
-    break;
-  case 256:
-    Res = 15;
-    break;
-  default:
-    llvm_unreachable("Unexpected operand value!");
-  }
-
-  return Res;
-}
 #include "OpenRiscGenMCCodeEmitter.inc"

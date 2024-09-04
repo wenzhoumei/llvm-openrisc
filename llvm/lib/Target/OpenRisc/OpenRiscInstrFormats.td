@@ -194,7 +194,7 @@ class F9_Inst<bits<11> opcode,
   OpenRisc_Inst<outs, ins, asmStr, pattern, itin> {
   bits<5>  ra;
   bits<5>  rb;
-  bits<11> reserved;
+  bits<11> reserved = 0;
 
   let Inst{31-21} = opcode;
   let Inst{20-16} = ra;
@@ -212,7 +212,7 @@ class F10_Inst<bits<6> opcode1, bits<1> opcode2,
   OpenRisc_Inst<outs, ins, asmStr, pattern, itin> {
 
   bits<5>  rd;
-  bits<4>  reserved;
+  bits<4>  reserved = 0;
   bits<16> imm;
  
   let Inst{31-26} = opcode1;
@@ -251,7 +251,7 @@ class F12_Inst<bits<8> opcode,
                InstrItinClass itin = NoItinerary> :
   OpenRisc_Inst<outs, ins, asmStr, pattern, itin> {
 
-  bits<8>  reserved;
+  bits<8>  reserved = 0;
   bits<16> imm;
 
   let Inst{31-24} = opcode;
@@ -267,7 +267,7 @@ class F13_Inst<bits<6> opcode,
                dag outs, dag ins, string asmStr, list<dag> pattern,
                InstrItinClass itin = NoItinerary> :
   OpenRisc_Inst<outs, ins, asmStr, pattern, itin> {
-  bits<26> reserved;
+  bits<26> reserved = 0;
 
   let Inst{31-26} = opcode;
   let Inst{25-0}  = reserved;

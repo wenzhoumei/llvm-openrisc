@@ -1,4 +1,4 @@
-//===- OpenRiscInstrInfo.td - OpenRISC Instruction Descriptions -*- tablegen -*-===//
+//===- OpenRiscInstrInfo.td - OpenRiscInstruction Descriptions -*- tablegen -*-===//
 //
 //                     The LLVM Compiler Infrastructure
 //
@@ -8,7 +8,7 @@
 //
 //===----------------------------------------------------------------------===//
 //
-// This file describes the OpenRISC instructions in TableGen format.
+// This file describes the OpenRisc instructions in TableGen format.
 //
 //===----------------------------------------------------------------------===//
 
@@ -41,8 +41,8 @@ class F2_InstWrapper<bits<6> opcode,
                      string opcodeAsm, SDPatternOperator opNode,
                      InstrItinClass itin = NoItinerary> :
     F2_Inst<opcode,
-            (outs GPR:$rd), (ins GPR:$ra, i16imm:$imm),
-            opcodeAsm#" $rd, $ra, $imm", [(set GPR:$rd, (opNode GPR:$ra, i16imm:$imm))],
+            (outs GPR:$rd), (ins GPR:$ra, simm16:$imm),
+            opcodeAsm#" $rd, $ra, $imm", [(set GPR:$rd, (opNode GPR:$ra, simm16:$imm))],
             itin>;
 
 def ADDI  : F2_InstWrapper<0x27, "l.addi", add>;
@@ -99,17 +99,17 @@ def JALR : F5_InstWrapper<0x12, "l.jalr", [(OpenRisc_call GPR:$rb)]>;
 // Format 6  - Jumps and branch instructions with immediate
 //===----------------------------------------------------------------------===//
 class F6_InstWrapper<bits<6> opcode,
-                     string opcodeAsm, list<dag> pattern,
+                     string opcodeAsm, list<dag> pattern, Operand opType,
                      InstrItinClass itin = NoItinerary> :
     F6_Inst<opcode,
-            (outs), (ins i32imm:$imm),
+            (outs), (ins opType:$imm),
             opcodeAsm#" $imm", pattern,
             itin>;
 
-def J   : F6_InstWrapper<0x0, "l.j", [(br tglobaladdr:$imm)]>;
-def JAL : F6_InstWrapper<0x1, "l.jal", [(OpenRisc_call tglobaladdr:$imm)]>;
-def BNF : F6_InstWrapper<0x3, "l.bnf", []>;
-def BF  : F6_InstWrapper<0x4, "l.bf", []>;
+def J   : F6_InstWrapper<0x0, "l.j", [(br bb:$imm)], brtarget>;
+def JAL : F6_InstWrapper<0x1, "l.jal", [(OpenRisc_call tglobaladdr:$imm)], calltarget>;
+def BNF : F6_InstWrapper<0x3, "l.bnf", [], brtarget>;
+def BF  : F6_InstWrapper<0x4, "l.bf", [], brtarget>;
 
 //===----------------------------------------------------------------------===//
 // Format 7 - Load instructions
@@ -118,8 +118,8 @@ class F7_InstWrapper<bits<6> opcode,
                      string opcodeAsm, SDPatternOperator opNode,
                      InstrItinClass itin = NoItinerary> :
     F7_Inst<opcode,
-            (outs GPR:$rd), (ins memri:$addr),
-            opcodeAsm#" $rd, $imm($ra)", [(set GPR:$rd, (opNode addrimm:$addr))],
+            (outs GPR:$rd), (ins simm16:$imm, GPR:$ra),
+            opcodeAsm#" $rd, ${imm}(${ra})", [(set GPR:$rd, (opNode (addrimm GPR:$ra, simm16:$imm)))], // https://vscode.dev/github/wenzhoumei/llvm-openrisc/blob/main/llvm/lib/Target/RISCV/RISCVInstrInfo.td#L1708
             itin>;
 
 def LWZ   : F7_InstWrapper<0x21, "l.lwz", load>;
@@ -136,8 +136,8 @@ class F8_InstWrapper<bits<6> opcode,
                      string opcodeAsm, SDPatternOperator opNode,
                      InstrItinClass itin = NoItinerary> :
     F8_Inst<opcode,
-            (outs), (ins GPR:$ra, memri:$addr),
-            opcodeAsm#" $imm($ra), $rb", [(opNode GPR:$rb, addrimm:$addr)],
+            (outs), (ins simm16:$imm, GPR:$ra, GPR:$rb),
+            opcodeAsm#" ${imm}(${ra}), $rb", [(opNode GPR:$rb, (addrimm GPR:$ra, simm16:$imm))],
             itin>;
             
 def SW : F8_InstWrapper<0x35, "l.sw", store>;
@@ -233,6 +233,17 @@ class F14_InstWrapper<bits<16> opcode,
 def SYS : F14_InstWrapper<0x2000, "l.sys", []>;
 
 //===----------------------------------------------------------------------===//
+// Call matching
+//===----------------------------------------------------------------------===//
+let isReturn = 1, isTerminator = 1,
+    isBarrier = 1, Uses = [R9] in {
+def RET : F5_Inst<0x11, (outs), (ins),
+                  "l.jr lr", [(OpenRisc_ret)]> {
+        let rb = 0x9;
+}
+}
+
+//===----------------------------------------------------------------------===//
 // Stack allocation
 //===----------------------------------------------------------------------===//
 
@@ -240,10 +251,10 @@ def SYS : F14_InstWrapper<0x2000, "l.sys", []>;
 // a stack adjustment and the codegen must know that they may modify the stack
 // pointer before prolog-epilog rewriting occurs.
 let Defs = [R1], Uses = [R1] in {
-  def ADJCALLSTACKDOWN : Pseudo_Inst<(outs), (ins i32imm:$ra, i32imm:$rb),
-                               "#ADJCALLSTACKDOWN",
-                               [(OpenRisc_callseq_start timm:$ra, timm:$rb)]>;
-  def ADJCALLSTACKUP   : Pseudo_Inst<(outs), (ins i32imm:$amt1, i32imm:$amt2),
-                               "#ADJCALLSTACKUP",
-                               [(OpenRisc_callseq_end timm:$ra, timm:$rb)]>;
+def ADJCALLSTACKDOWN : Pseudo_Inst<(outs), (ins i32imm:$ra, i32imm:$rb),
+                        "#ADJCALLSTACKDOWN",
+                        [(OpenRisc_callseq_start timm:$ra, timm:$rb)]>;
+def ADJCALLSTACKUP   : Pseudo_Inst<(outs), (ins i32imm:$ra, i32imm:$rb),
+                        "#ADJCALLSTACKUP",
+                        [(OpenRisc_callseq_end timm:$ra, timm:$rb)]>;
 }

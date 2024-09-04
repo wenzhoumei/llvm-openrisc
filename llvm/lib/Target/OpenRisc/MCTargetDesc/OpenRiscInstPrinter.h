@@ -43,13 +43,14 @@ public:
 private:
   // Print various types of operand.
   void printOperand(const MCInst *MI, int OpNum, raw_ostream &O);
+
   void printMemOperand(const MCInst *MI, int OpNUm, raw_ostream &O);
   void printBranchTarget(const MCInst *MI, int OpNum, raw_ostream &O);
-  void printJumpTarget(const MCInst *MI, int OpNum, raw_ostream &O);
   void printCallOperand(const MCInst *MI, int OpNum, raw_ostream &O);
-  void printL32RTarget(const MCInst *MI, int OpNum, raw_ostream &O);
 
-  void printImm16High_AsmOperand(const MCInst *MI, int OpNum, raw_ostream &O);
+  void printUImm16High_AsmOperand(const MCInst *MI, int OpNum, raw_ostream &O);
+  void printSImm16_AsmOperand(const MCInst *MI, int OpNum, raw_ostream &O);
+  void printUImm5_AsmOperand(const MCInst *MI, int OpNum, raw_ostream &O);
 };
 } // end namespace llvm
 

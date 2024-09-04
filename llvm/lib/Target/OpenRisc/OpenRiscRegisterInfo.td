@@ -114,8 +114,8 @@ foreach i = 0-15 in {
 }
 
 // Implementation-specific registers (ISR0-ISR7)
-foreach i = 21-28 in {
-  def ISR#i : SPR<0, i, "ISR"#i>;
+foreach i = 0-7 in {
+  def ISR#i : SPR<0, !add(21,i), "ISR"#i>;
 }
 
 // Core and Core Count registers
@@ -123,8 +123,8 @@ def COREID : SPR<0, 128, "COREID">;   // Core Identifier Register
 def NUMCORES : SPR<0, 129, "NUMCORES">;   // Number of Cores Register
 
 // GPRs mapped to SPR space
-foreach i = 1024-1535 in {
-  def GPRReg_SPR#i : SPR<0, i, "GPRReg_SPR"#i>;
+foreach i = 0-511 in {
+  def GPRReg_SPR#i : SPR<0, !add(1024,i), "GPRReg_SPR"#i>;
 }
 
 //===----------------------------------------------------------------------===//

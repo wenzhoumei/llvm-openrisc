@@ -88,9 +88,6 @@ SDValue OpenRiscTargetLowering::LowerFormalArguments(
 
   CCInfo.AnalyzeFormalArguments(Ins, CC_OpenRisc);
 
-  unsigned StackSlotSize = 4;
-
-
   for (unsigned i = 0, e = ArgLocs.size(); i != e; ++i) {
     CCValAssign &VA = ArgLocs[i];
     
@@ -187,9 +184,7 @@ OpenRiscTargetLowering::LowerCall(CallLoweringInfo &CLI,
   SmallVector<CCValAssign, 16> ArgLocs;
   CCState CCInfo(CallConv, IsVarArg, MF, ArgLocs, *DAG.getContext());
 
-  CCAssignFn *CC = CCAssignFnForCall(CallConv, IsVarArg);
-
-  CCInfo.AnalyzeCallOperands(Outs, CC);
+  CCInfo.AnalyzeCallOperands(Outs, CC_OpenRisc);
 
   // Get a count of how many bytes are to be pushed on the stack.
   unsigned NumBytes = CCInfo.getStackSize();
@@ -388,4 +383,20 @@ SDValue OpenRiscTargetLowering::LowerOperation(SDValue Op, SelectionDAG &DAG) co
   default:
     report_fatal_error("Unexpected node to lower");
   }
+}
+
+const char *OpenRiscTargetLowering::getTargetNodeName(unsigned Opcode) const {
+  switch (Opcode) {
+  case OpenRiscISD::BR_JT:
+    return "OpenRiscISD::BR_JT";
+  case OpenRiscISD::CALL:
+    return "OpenRiscISD::CALL";
+  case OpenRiscISD::PCREL_WRAPPER:
+    return "OpenRiscISD::PCREL_WRAPPER";
+  case OpenRiscISD::RET:
+    return "OpenRiscISD::RET";
+  case OpenRiscISD::SELECT_CC:
+    return "OpenRiscISD::SELECT_CC";
+  }
+  return nullptr;
 }

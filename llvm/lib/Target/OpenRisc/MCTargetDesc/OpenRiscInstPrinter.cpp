@@ -105,22 +105,6 @@ void OpenRiscInstPrinter::printBranchTarget(const MCInst *MI, int OpNum,
     llvm_unreachable("Invalid operand");
 }
 
-void OpenRiscInstPrinter::printJumpTarget(const MCInst *MI, int OpNum,
-                                        raw_ostream &OS) {
-  const MCOperand &MC = MI->getOperand(OpNum);
-  if (MC.isImm()) {
-    int64_t Val = MC.getImm() + 4;
-    OS << ". ";
-    if (Val > 0)
-      OS << '+';
-    OS << Val;
-  } else if (MC.isExpr())
-    MC.getExpr()->print(OS, &MAI, true);
-  else
-    llvm_unreachable("Invalid operand");
-  ;
-}
-
 void OpenRiscInstPrinter::printCallOperand(const MCInst *MI, int OpNum,
                                          raw_ostream &OS) {
   const MCOperand &MC = MI->getOperand(OpNum);
@@ -136,214 +120,42 @@ void OpenRiscInstPrinter::printCallOperand(const MCInst *MI, int OpNum,
     llvm_unreachable("Invalid operand");
 }
 
-void OpenRiscInstPrinter::printL32RTarget(const MCInst *MI, int OpNum,
-                                        raw_ostream &O) {
-  const MCOperand &MC = MI->getOperand(OpNum);
-  if (MC.isImm()) {
-    int64_t Value = MI->getOperand(OpNum).getImm();
-    int64_t InstrOff = Value & 0x3;
-    Value -= InstrOff;
-    assert((Value >= -262144 && Value <= -4) &&
-           "Invalid argument, value must be in ranges [-262144,-4]");
-    Value += ((InstrOff + 0x3) & 0x4) - InstrOff;
-    O << ". ";
-    O << Value;
-  } else if (MC.isExpr())
-    MC.getExpr()->print(O, &MAI, true);
-  else
-    llvm_unreachable("Invalid operand");
-}
-
-void OpenRiscInstPrinter::printImm8_AsmOperand(const MCInst *MI, int OpNum,
-                                             raw_ostream &O) {
+void OpenRiscInstPrinter::printUImm16High_AsmOperand(const MCInst *MI, int OpNum,
+                                                   raw_ostream &O) {
   if (MI->getOperand(OpNum).isImm()) {
+    // Get the 32-bit immediate value
     int64_t Value = MI->getOperand(OpNum).getImm();
-    assert(isInt<8>(Value) &&
-           "Invalid argument, value must be in ranges [-128,127]");
-    O << Value;
+
+    // Extract the high 16 bits by shifting the value right by 16
+    int64_t High16 = (Value >> 16) & 0xFFFF; // Mask to keep only 16 bits
+
+    // Assert to ensure the high 16 bits are valid
+    assert((High16 >= 0 && High16 <= 65535) && "Invalid high 16-bit value");
+
+    // Output the high 16 bits
+    O << High16;
   } else {
+    // If not an immediate, fallback to generic operand printing
     printOperand(MI, OpNum, O);
   }
 }
 
-void OpenRiscInstPrinter::printImm8_sh8_AsmOperand(const MCInst *MI, int OpNum,
-                                                 raw_ostream &O) {
-  if (MI->getOperand(OpNum).isImm()) {
-    int64_t Value = MI->getOperand(OpNum).getImm();
-    assert((isInt<16>(Value) && ((Value & 0xFF) == 0)) &&
-           "Invalid argument, value must be multiples of 256 in range "
-           "[-32768,32512]");
-    O << Value;
-  } else
-    printOperand(MI, OpNum, O);
-}
 
-void OpenRiscInstPrinter::printImm12_AsmOperand(const MCInst *MI, int OpNum,
+void OpenRiscInstPrinter::printSImm16_AsmOperand(const MCInst *MI, int OpNum,
                                               raw_ostream &O) {
   if (MI->getOperand(OpNum).isImm()) {
     int64_t Value = MI->getOperand(OpNum).getImm();
-    assert((Value >= -2048 && Value <= 2047) &&
-           "Invalid argument, value must be in ranges [-2048,2047]");
+    assert((Value >= 32768 && Value <= 32767) && "Invalid argument");
     O << Value;
   } else
     printOperand(MI, OpNum, O);
 }
 
-void OpenRiscInstPrinter::printImm12m_AsmOperand(const MCInst *MI, int OpNum,
-                                               raw_ostream &O) {
-  if (MI->getOperand(OpNum).isImm()) {
-    int64_t Value = MI->getOperand(OpNum).getImm();
-    assert((Value >= -2048 && Value <= 2047) &&
-           "Invalid argument, value must be in ranges [-2048,2047]");
-    O << Value;
-  } else
-    printOperand(MI, OpNum, O);
-}
-
-void OpenRiscInstPrinter::printUimm4_AsmOperand(const MCInst *MI, int OpNum,
-                                              raw_ostream &O) {
-  if (MI->getOperand(OpNum).isImm()) {
-    int64_t Value = MI->getOperand(OpNum).getImm();
-    assert((Value >= 0 && Value <= 15) && "Invalid argument");
-    O << Value;
-  } else
-    printOperand(MI, OpNum, O);
-}
-
-void OpenRiscInstPrinter::printUimm5_AsmOperand(const MCInst *MI, int OpNum,
+void OpenRiscInstPrinter::printUImm5_AsmOperand(const MCInst *MI, int OpNum,
                                               raw_ostream &O) {
   if (MI->getOperand(OpNum).isImm()) {
     int64_t Value = MI->getOperand(OpNum).getImm();
     assert((Value >= 0 && Value <= 31) && "Invalid argument");
-    O << Value;
-  } else
-    printOperand(MI, OpNum, O);
-}
-
-void OpenRiscInstPrinter::printShimm1_31_AsmOperand(const MCInst *MI, int OpNum,
-                                                  raw_ostream &O) {
-  if (MI->getOperand(OpNum).isImm()) {
-    int64_t Value = MI->getOperand(OpNum).getImm();
-    assert((Value >= 1 && Value <= 31) &&
-           "Invalid argument, value must be in range [1,31]");
-    O << Value;
-  } else
-    printOperand(MI, OpNum, O);
-}
-
-void OpenRiscInstPrinter::printImm1_16_AsmOperand(const MCInst *MI, int OpNum,
-                                                raw_ostream &O) {
-  if (MI->getOperand(OpNum).isImm()) {
-    int64_t Value = MI->getOperand(OpNum).getImm();
-    assert((Value >= 1 && Value <= 16) &&
-           "Invalid argument, value must be in range [1,16]");
-    O << Value;
-  } else
-    printOperand(MI, OpNum, O);
-}
-
-void OpenRiscInstPrinter::printOffset8m8_AsmOperand(const MCInst *MI, int OpNum,
-                                                  raw_ostream &O) {
-  if (MI->getOperand(OpNum).isImm()) {
-    int64_t Value = MI->getOperand(OpNum).getImm();
-    assert((Value >= 0 && Value <= 255) &&
-           "Invalid argument, value must be in range [0,255]");
-    O << Value;
-  } else
-    printOperand(MI, OpNum, O);
-}
-
-void OpenRiscInstPrinter::printOffset8m16_AsmOperand(const MCInst *MI, int OpNum,
-                                                   raw_ostream &O) {
-  if (MI->getOperand(OpNum).isImm()) {
-    int64_t Value = MI->getOperand(OpNum).getImm();
-    assert((Value >= 0 && Value <= 510 && ((Value & 0x1) == 0)) &&
-           "Invalid argument, value must be multiples of two in range [0,510]");
-    O << Value;
-  } else
-    printOperand(MI, OpNum, O);
-}
-
-void OpenRiscInstPrinter::printOffset8m32_AsmOperand(const MCInst *MI, int OpNum,
-                                                   raw_ostream &O) {
-  if (MI->getOperand(OpNum).isImm()) {
-    int64_t Value = MI->getOperand(OpNum).getImm();
-    assert(
-        (Value >= 0 && Value <= 1020 && ((Value & 0x3) == 0)) &&
-        "Invalid argument, value must be multiples of four in range [0,1020]");
-    O << Value;
-  } else
-    printOperand(MI, OpNum, O);
-}
-
-void OpenRiscInstPrinter::printOffset4m32_AsmOperand(const MCInst *MI, int OpNum,
-                                                   raw_ostream &O) {
-  if (MI->getOperand(OpNum).isImm()) {
-    int64_t Value = MI->getOperand(OpNum).getImm();
-    assert((Value >= 0 && Value <= 60 && ((Value & 0x3) == 0)) &&
-           "Invalid argument, value must be multiples of four in range [0,60]");
-    O << Value;
-  } else
-    printOperand(MI, OpNum, O);
-}
-
-void OpenRiscInstPrinter::printB4const_AsmOperand(const MCInst *MI, int OpNum,
-                                                raw_ostream &O) {
-  if (MI->getOperand(OpNum).isImm()) {
-    int64_t Value = MI->getOperand(OpNum).getImm();
-
-    switch (Value) {
-    case -1:
-    case 1:
-    case 2:
-    case 3:
-    case 4:
-    case 5:
-    case 6:
-    case 7:
-    case 8:
-    case 10:
-    case 12:
-    case 16:
-    case 32:
-    case 64:
-    case 128:
-    case 256:
-      break;
-    default:
-      assert((0) && "Invalid B4const argument");
-    }
-    O << Value;
-  } else
-    printOperand(MI, OpNum, O);
-}
-
-void OpenRiscInstPrinter::printB4constu_AsmOperand(const MCInst *MI, int OpNum,
-                                                 raw_ostream &O) {
-  if (MI->getOperand(OpNum).isImm()) {
-    int64_t Value = MI->getOperand(OpNum).getImm();
-
-    switch (Value) {
-    case 32768:
-    case 65536:
-    case 2:
-    case 3:
-    case 4:
-    case 5:
-    case 6:
-    case 7:
-    case 8:
-    case 10:
-    case 12:
-    case 16:
-    case 32:
-    case 64:
-    case 128:
-    case 256:
-      break;
-    default:
-      assert((0) && "Invalid B4constu argument");
-    }
     O << Value;
   } else
     printOperand(MI, OpNum, O);

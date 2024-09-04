@@ -74,24 +74,7 @@ static DecodeStatus DecodeGPRRegisterClass(MCInst &Inst, uint64_t RegNo,
   Inst.addOperand(MCOperand::createReg(Reg));
   return MCDisassembler::Success;
 }
-
-static DecodeStatus decodeMem8Operand(MCInst &Inst, uint64_t Imm,
-                                      int64_t Address, const void *Decoder) {
-  assert(isUInt<12>(Imm) && "Invalid immediate");
-  DecodeGPRRegisterClass(Inst, Imm & 0xf, Address, Decoder);
-  Inst.addOperand(MCOperand::createImm((Imm >> 4) & 0xff));
-  return MCDisassembler::Success;
-}
-
-static DecodeStatus decodeMem16Operand(MCInst &Inst, uint64_t Imm,
-                                       int64_t Address, const void *Decoder) {
-  assert(isUInt<12>(Imm) && "Invalid immediate");
-  DecodeGPRRegisterClass(Inst, Imm & 0xf, Address, Decoder);
-  Inst.addOperand(MCOperand::createImm((Imm >> 3) & 0x1fe));
-  return MCDisassembler::Success;
-}
-
-static DecodeStatus decodeMem32Operand(MCInst &Inst, uint64_t Imm,
+static DecodeStatus decodeMemRegOperand(MCInst &Inst, uint64_t Imm,
                                        int64_t Address, const void *Decoder) {
   assert(isUInt<12>(Imm) && "Invalid immediate");
   DecodeGPRRegisterClass(Inst, Imm & 0xf, Address, Decoder);

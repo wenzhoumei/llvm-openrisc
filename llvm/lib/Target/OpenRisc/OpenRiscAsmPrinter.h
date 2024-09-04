@@ -35,8 +35,6 @@ public:
   StringRef getPassName() const override { return "OpenRisc Assembly Printer"; }
   void emitInstruction(const MachineInstr *MI) override;
 
-  MCSymbol *GetJumpTableSymbol(const MachineOperand &MO) const;
-
   MCOperand LowerSymbolOperand(const MachineOperand &MO,
                                MachineOperand::MachineOperandType MOTy,
                                unsigned Offset) const;

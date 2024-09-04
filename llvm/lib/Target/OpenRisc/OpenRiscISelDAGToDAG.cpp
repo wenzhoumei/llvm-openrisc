@@ -35,7 +35,7 @@ public:
 
   // For load/store instructions generate (base+offset) pair from
   // memory address.
-  bool selectMemRegAddr(SDValue Addr, SDValue &Base, SDValue &Offset) {
+  bool selectAddrRegImm(SDValue Addr, SDValue &Base, SDValue &Offset) {
     EVT ValTy = Addr.getValueType();
 
     // if Address is FI, get the TargetFrameIndex.
@@ -61,7 +61,6 @@ public:
     bool Valid = false;
     if (CurDAG->isBaseWithConstantOffset(Addr)) {
       ConstantSDNode *CN = dyn_cast<ConstantSDNode>(Addr.getOperand(1));
-      int64_t OffsetVal = CN->getSExtValue();
 
       if (Valid) {
         // If the first operand is a FI, get the TargetFI Node

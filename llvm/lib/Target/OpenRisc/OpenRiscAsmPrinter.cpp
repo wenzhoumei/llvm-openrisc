@@ -29,36 +29,17 @@
 
 using namespace llvm;
 
-static MCSymbolRefExpr::VariantKind
-getModifierVariantKind(OpenRiscCP::OpenRiscCPModifier Modifier) {
-  switch (Modifier) {
-  case OpenRiscCP::no_modifier:
-    return MCSymbolRefExpr::VK_None;
-  case OpenRiscCP::TPOFF:
-    return MCSymbolRefExpr::VK_TPOFF;
-  }
-  report_fatal_error("Invalid OpenRiscCPModifier!");
-}
-
 void OpenRiscAsmPrinter::emitInstruction(const MachineInstr *MI) {
   unsigned Opc = MI->getOpcode();
 
   switch (Opc) {
-  case OpenRisc::BR_JT:
-    EmitToStreamer(
-        *OutStreamer,
-        MCInstBuilder(OpenRisc::JX).addReg(MI->getOperand(0).getReg()));
-    return;
+  // TODO: Add case here if jump table added
   default:
     MCInst LoweredMI;
     lowerToMCInst(MI, LoweredMI);
     EmitToStreamer(*OutStreamer, LoweredMI);
     return;
   }
-}
-
-MCSymbol *OpenRiscAsmPrinter::GetJumpTableSymbol(const MachineOperand &MO) const {
-  return GetJTISymbol(MO.getIndex());
 }
 
 MCOperand
@@ -83,9 +64,6 @@ OpenRiscAsmPrinter::LowerSymbolOperand(const MachineOperand &MO,
   case MachineOperand::MO_ExternalSymbol:
     Symbol = GetExternalSymbolSymbol(MO.getSymbolName());
     Offset += MO.getOffset();
-    break;
-  case MachineOperand::MO_JumpTableIndex:
-    Symbol = GetJumpTableSymbol(MO);
     break;
   default:
     report_fatal_error("<unknown operand type>");

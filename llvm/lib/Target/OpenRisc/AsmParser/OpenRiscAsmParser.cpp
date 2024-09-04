@@ -368,56 +368,7 @@ bool OpenRiscAsmParser::processInstruction(MCInst &Inst, SMLoc IDLoc,
   Inst.setLoc(IDLoc);
   const unsigned Opcode = Inst.getOpcode();
   switch (Opcode) {
-  case OpenRisc::L32R: {
-    const MCSymbolRefExpr *OpExpr =
-        static_cast<const MCSymbolRefExpr *>(Inst.getOperand(1).getExpr());
-    OpenRiscMCExpr::VariantKind Kind = OpenRiscMCExpr::VK_OpenRisc_None;
-    const MCExpr *NewOpExpr = OpenRiscMCExpr::create(OpExpr, Kind, getContext());
-    Inst.getOperand(1).setExpr(NewOpExpr);
-    break;
-  }
-  case OpenRisc::MOVI: {
-    OpenRiscTargetStreamer &TS = this->getTargetStreamer();
-
-    // Expand MOVI operand
-    if (!Inst.getOperand(1).isExpr()) {
-      uint64_t ImmOp64 = Inst.getOperand(1).getImm();
-      int32_t Imm = ImmOp64;
-      if (!isInt<12>(Imm)) {
-        OpenRiscTargetStreamer &TS = this->getTargetStreamer();
-        MCInst TmpInst;
-        TmpInst.setLoc(IDLoc);
-        TmpInst.setOpcode(OpenRisc::L32R);
-        const MCExpr *Value = MCConstantExpr::create(ImmOp64, getContext());
-        MCSymbol *Sym = getContext().createTempSymbol();
-        const MCExpr *Expr = MCSymbolRefExpr::create(
-            Sym, MCSymbolRefExpr::VK_None, getContext());
-        const MCExpr *OpExpr = OpenRiscMCExpr::create(
-            Expr, OpenRiscMCExpr::VK_OpenRisc_None, getContext());
-        TmpInst.addOperand(Inst.getOperand(0));
-        MCOperand Op1 = MCOperand::createExpr(OpExpr);
-        TmpInst.addOperand(Op1);
-        TS.emitLiteral(Sym, Value, true, IDLoc);
-        Inst = TmpInst;
-      }
-    } else {
-      MCInst TmpInst;
-      TmpInst.setLoc(IDLoc);
-      TmpInst.setOpcode(OpenRisc::L32R);
-      const MCExpr *Value = Inst.getOperand(1).getExpr();
-      MCSymbol *Sym = getContext().createTempSymbol();
-      const MCExpr *Expr =
-          MCSymbolRefExpr::create(Sym, MCSymbolRefExpr::VK_None, getContext());
-      const MCExpr *OpExpr = OpenRiscMCExpr::create(
-          Expr, OpenRiscMCExpr::VK_OpenRisc_None, getContext());
-      TmpInst.addOperand(Inst.getOperand(0));
-      MCOperand Op1 = MCOperand::createExpr(OpExpr);
-      TmpInst.addOperand(Op1);
-      Inst = TmpInst;
-      TS.emitLiteral(Sym, Value, true, IDLoc);
-    }
-    break;
-  }
+  // TODO: See if I have to do anything here
   default:
     break;
   }
@@ -458,52 +409,15 @@ bool OpenRiscAsmParser::MatchAndEmitInstruction(SMLoc IDLoc, unsigned &Opcode,
     }
     return Error(ErrorLoc, "invalid operand for instruction");
   }
-  case Match_InvalidImm8:
-    return Error(RefineErrorLoc(IDLoc, Operands, ErrorInfo),
-                 "expected immediate in range [-128, 127]");
-  case Match_InvalidImm8_sh8:
-    return Error(RefineErrorLoc(IDLoc, Operands, ErrorInfo),
-                 "expected immediate in range [-32768, 32512], first 8 bits "
-                 "should be zero");
-  case Match_InvalidB4const:
-    return Error(RefineErrorLoc(IDLoc, Operands, ErrorInfo),
-                 "expected b4const immediate");
-  case Match_InvalidB4constu:
-    return Error(RefineErrorLoc(IDLoc, Operands, ErrorInfo),
-                 "expected b4constu immediate");
-  case Match_InvalidImm12:
-    return Error(RefineErrorLoc(IDLoc, Operands, ErrorInfo),
-                 "expected immediate in range [-2048, 2047]");
-  case Match_InvalidImm12m:
-    return Error(RefineErrorLoc(IDLoc, Operands, ErrorInfo),
-                 "expected immediate in range [-2048, 2047]");
-  case Match_InvalidImm1_16:
-    return Error(RefineErrorLoc(IDLoc, Operands, ErrorInfo),
-                 "expected immediate in range [1, 16]");
-  case Match_InvalidShimm1_31:
-    return Error(RefineErrorLoc(IDLoc, Operands, ErrorInfo),
-                 "expected immediate in range [1, 31]");
-  case Match_InvalidUimm4:
-    return Error(RefineErrorLoc(IDLoc, Operands, ErrorInfo),
-                 "expected immediate in range [0, 15]");
-  case Match_InvalidUimm5:
+  case Match_InvalidUImm5:
     return Error(RefineErrorLoc(IDLoc, Operands, ErrorInfo),
                  "expected immediate in range [0, 31]");
-  case Match_InvalidOffset8m8:
+  case Match_InvalidSImm16:
     return Error(RefineErrorLoc(IDLoc, Operands, ErrorInfo),
-                 "expected immediate in range [0, 255]");
-  case Match_InvalidOffset8m16:
-    return Error(RefineErrorLoc(IDLoc, Operands, ErrorInfo),
-                 "expected immediate in range [0, 510], first bit "
-                 "should be zero");
-  case Match_InvalidOffset8m32:
-    return Error(RefineErrorLoc(IDLoc, Operands, ErrorInfo),
-                 "expected immediate in range [0, 1020], first 2 bits "
-                 "should be zero");
-  case Match_InvalidOffset4m32:
-    return Error(RefineErrorLoc(IDLoc, Operands, ErrorInfo),
-                 "expected immediate in range [0, 60], first 2 bits "
-                 "should be zero");
+                 "expected immediate in range [-32768, 32512]");
+  case Match_InvalidUImm16High:
+      return Error(RefineErrorLoc(IDLoc, Operands, ErrorInfo),
+                "expected immediate in range [0, 65535] for upper 16 bits");
   }
 
   report_fatal_error("Unknown match type detected!");

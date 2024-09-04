@@ -1,0 +1,2 @@
+This section describes todos outside of the Target directory
+- Add "LLVM_ASM_PARSER(OpenRisc)" to /llvm-openrisc/build/include/llvm/Config/AsmParsers.def
