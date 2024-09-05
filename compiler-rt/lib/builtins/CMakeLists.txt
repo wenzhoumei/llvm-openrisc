@@ -773,6 +773,11 @@ set(ve_SOURCES
   ${GENERIC_TF_SOURCES}
   ${GENERIC_SOURCES})
 
+set(openrisc_SOURCES
+  openrisc/mulsi3.S
+  ${openrisc_SOURCES}
+)
+
 add_custom_target(builtins)
 set_target_properties(builtins PROPERTIES FOLDER "Compiler-RT/Metatargets")
 

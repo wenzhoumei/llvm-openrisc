@@ -42,7 +42,5 @@ def OpenRisc_callseq_end  : SDNode<"ISD::CALLSEQ_END",   SDT_OpenRiscCallSeqEnd,
                                 [SDNPHasChain, SDNPSideEffect, SDNPOptInGlue,
                                  SDNPOutGlue]>;
 
-def OpenRisc_brjt: SDNode<"OpenRiscISD::BR_JT", SDT_OpenRiscBrJT, [SDNPHasChain]>;
-
 def OpenRisc_select_cc: SDNode<"OpenRiscISD::SELECT_CC", SDT_OpenRiscSelectCC,
                             [SDNPInGlue]>;

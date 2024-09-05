@@ -107,9 +107,12 @@ class F6_InstWrapper<bits<6> opcode,
             itin>;
 
 def J   : F6_InstWrapper<0x0, "l.j", [(br bb:$imm)], brtarget>;
-def JAL : F6_InstWrapper<0x1, "l.jal", [(OpenRisc_call tglobaladdr:$imm)], calltarget>;
+def JAL : F6_InstWrapper<0x1, "l.jal", [], calltarget>;
 def BNF : F6_InstWrapper<0x3, "l.bnf", [], brtarget>;
 def BF  : F6_InstWrapper<0x4, "l.bf", [], brtarget>;
+
+def : Pat<(OpenRisc_call tglobaladdr:$imm), (JAL $imm)>;
+def : Pat<(OpenRisc_call texternalsym:$imm), (JAL $imm)>;
 
 //===----------------------------------------------------------------------===//
 // Format 7 - Load instructions
