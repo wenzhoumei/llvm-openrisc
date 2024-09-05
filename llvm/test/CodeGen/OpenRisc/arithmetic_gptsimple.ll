@@ -1,4 +1,4 @@
-; RUN: llc -march=openrisc < %s | FileCheck%s
+; RUN: llc -march=openrisc < %s | FileCheck %s
 
 ; Test addition
 define i32 @add(i32 %a, i32 %b) {
