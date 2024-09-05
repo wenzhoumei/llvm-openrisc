@@ -592,10 +592,6 @@ static_library("builtins") {
     ]
   }
 
-  if (current_cpu == "openrisc") {
-    sources += [ "openrisc/mulsi3.S" ]
-  }
-
   if (!compiler_rt_exclude_atomic_builtin) {
     sources += [ "atomic.c" ]
   }
