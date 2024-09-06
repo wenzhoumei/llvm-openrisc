@@ -91,25 +91,30 @@ class F5_InstWrapper<bits<6> opcode,
             (outs), (ins GPR:$rb),
             opcodeAsm#" $rb", pattern,
             itin>;
-
+let isBranch = 1, isTerminator = 1 in {
 def JR   : F5_InstWrapper<0x11, "l.jr", [(brind GPR:$rb)]>;
 def JALR : F5_InstWrapper<0x12, "l.jalr", [(OpenRisc_call GPR:$rb)]>;
-
+}
 //===----------------------------------------------------------------------===//
 // Format 6  - Jumps and branch instructions with immediate
 //===----------------------------------------------------------------------===//
 class F6_InstWrapper<bits<6> opcode,
-                     string opcodeAsm, list<dag> pattern, Operand opType,
+                     string opcodeAsm, list<dag> pattern, dag ins,
                      InstrItinClass itin = NoItinerary> :
     F6_Inst<opcode,
-            (outs), (ins opType:$imm),
+            (outs), ins,
             opcodeAsm#" $imm", pattern,
             itin>;
 
-def J   : F6_InstWrapper<0x0, "l.j", [(br bb:$imm)], brtarget>;
-def JAL : F6_InstWrapper<0x1, "l.jal", [], calltarget>;
-def BNF : F6_InstWrapper<0x3, "l.bnf", [], brtarget>;
-def BF  : F6_InstWrapper<0x4, "l.bf", [], brtarget>;
+let isBranch = 1, isTerminator = 1 in {
+def J   : F6_InstWrapper<0x0, "l.j", [(br bb:$imm)], (ins brtarget:$imm)>;
+def JAL : F6_InstWrapper<0x1, "l.jal", [], (ins calltarget:$imm)>;
+def BNF : F6_InstWrapper<0x3, "l.bnf", [], (ins SR:$sr, brtarget:$imm)>;
+def BF  : F6_InstWrapper<0x4, "l.bf", [], (ins SR:$sr, brtarget:$imm)>;
+}
+
+def: Pat<(brcond (seteq SR:$sr, 0), bb:$imm), (BNF SR:$sr, bb:$imm)>;
+def: Pat<(brcond (seteq SR:$sr, 1), bb:$imm), (BF SR:$sr, bb:$imm)>;
 
 def : Pat<(OpenRisc_call tglobaladdr:$imm), (JAL $imm)>;
 def : Pat<(OpenRisc_call texternalsym:$imm), (JAL $imm)>;
@@ -151,23 +156,23 @@ def SH : F8_InstWrapper<0x37, "l.sh", truncstorei16>;
 // Format 9 - Conditional set-flag instructions
 //===----------------------------------------------------------------------===//
 class F9_InstWrapper<bits<11> opcode,
-                     string opcodeAsm, SDPatternOperator opNode,
+                     string opcodeAsm, CondCode cc,
                      InstrItinClass itin = NoItinerary> :
     F9_Inst<opcode,
             (outs SR:$sr), (ins GPR:$ra, GPR:$rb),
-            opcodeAsm#" $ra, $rb", [(set SR:$sr, (opNode GPR:$ra, GPR:$rb))],
+            opcodeAsm#" $ra, $rb", [(set SR:$sr, (setcc GPR:$ra, GPR:$rb, cc))],
             itin>;
 
-def SFEQ  : F9_InstWrapper<0x720, "l.sfeq", seteq>;
-def SFNE  : F9_InstWrapper<0x721, "l.sfne", setne>;
-def SFGTU : F9_InstWrapper<0x722, "l.sfgtu", setugt>;
-def SFGEU : F9_InstWrapper<0x723, "l.sfgeu", setuge>;
-def SFLTU : F9_InstWrapper<0x724, "l.sfltu", setult>;
-def SFLEU : F9_InstWrapper<0x725, "l.sfleu", setule>;
-def SFGTS : F9_InstWrapper<0x72a, "l.sfgts", setgt>;
-def SFGES : F9_InstWrapper<0x72b, "l.sfges", setge>;
-def SFLTS : F9_InstWrapper<0x72c, "l.sflts", setlt>;
-def SFLES : F9_InstWrapper<0x72d, "l.sfles", setle>;
+def SFEQ  : F9_InstWrapper<0x720, "l.sfeq", SETEQ>;
+def SFNE  : F9_InstWrapper<0x721, "l.sfne", SETNE>;
+def SFGTU : F9_InstWrapper<0x722, "l.sfgtu", SETUGT>;
+def SFGEU : F9_InstWrapper<0x723, "l.sfgeu", SETUGE>;
+def SFLTU : F9_InstWrapper<0x724, "l.sfltu", SETULT>;
+def SFLEU : F9_InstWrapper<0x725, "l.sfleu", SETULE>;
+def SFGTS : F9_InstWrapper<0x72a, "l.sfgts", SETGT>;
+def SFGES : F9_InstWrapper<0x72b, "l.sfges", SETGE>;
+def SFLTS : F9_InstWrapper<0x72c, "l.sflts", SETLT>;
+def SFLES : F9_InstWrapper<0x72d, "l.sfles", SETLE>;
 
 //===----------------------------------------------------------------------===//
 // Format 10 - "Move Immediate High" instruction
@@ -238,10 +243,9 @@ def SYS : F14_InstWrapper<0x2000, "l.sys", []>;
 //===----------------------------------------------------------------------===//
 // Calls
 //===----------------------------------------------------------------------===//
-let isReturn = 1, isTerminator = 1,
-    isBarrier = 1, Uses = [R9] in {
+let isReturn = 1, isTerminator = 1, isBarrier = 1, Uses = [R9] in {
 def RET : F5_Inst<0x11, (outs), (ins),
-                  "l.jr lr", [(OpenRisc_ret)]> {
+                "l.jr lr", [(OpenRisc_ret)]> {
         let rb = 0x9;
 }
 }
@@ -261,3 +265,27 @@ def ADJCALLSTACKUP   : Pseudo_Inst<(outs), (ins i32imm:$ra, i32imm:$rb),
                         "#ADJCALLSTACKUP",
                         [(OpenRisc_callseq_end timm:$ra, timm:$rb)]>;
 }
+
+//===----------------------------------------------------------------------===//
+// Other patterns
+//===----------------------------------------------------------------------===//
+//def: Pat<(brcc SETNE, GPR:$ra, GPR:$rb, bb:$imm), (BF (SFNE GPR:$ra, GPR:$rb), bb:$imm)>;
+def: Pat<(simm16:$imm), (ADDI R0, simm16:$imm)>;
+
+
+multiclass BrccPat<CondCode cc, F9_InstWrapper inst> {
+  def : Pat<(brcc cc, GPR:$ra, GPR:$rb, bb:$imm),
+            (BF (inst GPR:$ra, GPR:$rb), bb:$imm)>;
+}
+
+// Instantiate the multiclass for each condition
+defm : BrccPat<SETEQ, SFEQ>;
+defm : BrccPat<SETNE, SFNE>;
+defm : BrccPat<SETUGT, SFGTU>;
+defm : BrccPat<SETUGE, SFGEU>;
+defm : BrccPat<SETULT, SFLTU>;
+defm : BrccPat<SETULE, SFLEU>;
+defm : BrccPat<SETGT, SFGTS>;
+defm : BrccPat<SETGE, SFGES>;
+defm : BrccPat<SETLT, SFLTS>;
+defm : BrccPat<SETLE, SFLES>;

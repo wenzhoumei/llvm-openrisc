@@ -45,6 +45,7 @@ OpenRiscTargetLowering::OpenRiscTargetLowering(const TargetMachine &TM,
   
   // Set up the registers
   addRegisterClass(MVT::i32, &OpenRisc::GPRRegClass);
+
   setStackPointerRegisterToSaveRestore(OpenRisc::R1);
 
   setSchedulingPreference(Sched::RegPressure);

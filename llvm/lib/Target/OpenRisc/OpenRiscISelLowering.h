@@ -74,7 +74,6 @@ public:
                       SelectionDAG &DAG) const override;
 
   const OpenRiscSubtarget &getSubtarget() const { return Subtarget; }
-
 private:
   const OpenRiscSubtarget &Subtarget;
 };

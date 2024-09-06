@@ -25,8 +25,12 @@ class GPRReg<bits<5> num, string n, list<string> alt = []> : OpenRiscReg<n> {
   let AltNames = alt;
 }
 
+
+let isConstant = true in {
 // Fixed zero register
 def R0 : GPRReg<0, "r0", ["zero"]>;
+}
+
 
 // Stack pointer
 def R1 : GPRReg<1, "r1", ["sp"]>, DwarfRegNum<[1]>;
