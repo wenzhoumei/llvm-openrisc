@@ -151,6 +151,16 @@ void OpenRiscInstPrinter::printSImm16_AsmOperand(const MCInst *MI, int OpNum,
     printOperand(MI, OpNum, O);
 }
 
+void OpenRiscInstPrinter::printUImm16_AsmOperand(const MCInst *MI, int OpNum,
+                                              raw_ostream &O) {
+  if (MI->getOperand(OpNum).isImm()) {
+    int64_t Value = MI->getOperand(OpNum).getImm();
+    assert((Value >= 0 && Value <= 65535) && "Invalid argument");
+    O << Value;
+  } else
+    printOperand(MI, OpNum, O);
+}
+
 void OpenRiscInstPrinter::printUImm5_AsmOperand(const MCInst *MI, int OpNum,
                                               raw_ostream &O) {
   if (MI->getOperand(OpNum).isImm()) {

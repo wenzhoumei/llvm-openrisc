@@ -38,18 +38,18 @@ def XOR  : F1_InstWrapper<0x38, 0x0, 0x5, "l.xor", xor>;
 // Format 2 - Arithmetic + logic instructions with immediate
 //===----------------------------------------------------------------------===//
 class F2_InstWrapper<bits<6> opcode,
-                     string opcodeAsm, SDPatternOperator opNode,
+                     string opcodeAsm, SDPatternOperator opNode, Immediate immOp,
                      InstrItinClass itin = NoItinerary> :
     F2_Inst<opcode,
-            (outs GPR:$rd), (ins GPR:$ra, simm16:$imm),
-            opcodeAsm#" $rd, $ra, $imm", [(set GPR:$rd, (opNode GPR:$ra, simm16:$imm))],
+            (outs GPR:$rd), (ins GPR:$ra, immOp:$imm),
+            opcodeAsm#" $rd, $ra, $imm", [(set GPR:$rd, (opNode GPR:$ra, immOp:$imm))],
             itin>;
 
-def ADDI  : F2_InstWrapper<0x27, "l.addi", add>;
-def ADDIC : F2_InstWrapper<0x28, "l.addic", addc>;
-def ANDI  : F2_InstWrapper<0x29, "l.andi", and>;
-def ORI   : F2_InstWrapper<0x2a, "l.ori", or>;
-def XORI  : F2_InstWrapper<0x2b, "l.xori", xor>;
+def ADDI  : F2_InstWrapper<0x27, "l.addi", add, simm16>;
+def ADDIC : F2_InstWrapper<0x28, "l.addic", addc, simm16>;
+def ANDI  : F2_InstWrapper<0x29, "l.andi", and, uimm16>;
+def ORI   : F2_InstWrapper<0x2a, "l.ori", or, uimm16>;
+def XORI  : F2_InstWrapper<0x2b, "l.xori", xor, uimm16>;
 
 //===----------------------------------------------------------------------===//
 // Format 3 - Shift instructions with register

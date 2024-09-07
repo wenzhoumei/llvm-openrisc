@@ -50,6 +50,7 @@ private:
 
   void printUImm16High_AsmOperand(const MCInst *MI, int OpNum, raw_ostream &O);
   void printSImm16_AsmOperand(const MCInst *MI, int OpNum, raw_ostream &O);
+  void printUImm16_AsmOperand(const MCInst *MI, int OpNum, raw_ostream &O);
   void printUImm5_AsmOperand(const MCInst *MI, int OpNum, raw_ostream &O);
 };
 } // end namespace llvm

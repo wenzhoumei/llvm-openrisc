@@ -29,6 +29,9 @@ def uimm16hi : Immediate<i32, [{ return (Imm & 0xFFFF) == 0; }], "UImm16High_Asm
 def SImm16_AsmOperand : ImmAsmOperand<"SImm16">;
 def simm16 : Immediate<i32, [{ return isInt<16>(Imm); }], "SImm16_AsmOperand">;
 
+def UImm16_AsmOperand : ImmAsmOperand<"UImm16">;
+def uimm16 : Immediate<i32, [{ return isUInt<16>(Imm); }], "UImm16_AsmOperand">;
+
 def UImm5_AsmOperand : ImmAsmOperand<"UImm5">;
 def uimm5 : Immediate<i32, [{ return isUInt<5>(Imm); }], "UImm5_AsmOperand">;
 
