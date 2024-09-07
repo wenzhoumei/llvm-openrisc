@@ -181,11 +181,11 @@ class F10_InstWrapper<bits<6> opcode1, bits<1> opcode2,
                      string opcodeAsm, list<dag> pattern,
                      InstrItinClass itin = NoItinerary> :
     F10_Inst<opcode1, opcode2,
-            (outs GPR:$rd), (ins uimm16hi:$imm),
+            (outs GPR:$rd), (ins imm16hi:$imm),
             opcodeAsm#" $rd, $imm", pattern,
             itin>;
 
-def MOVHI : F10_InstWrapper<0x6, 0x0, "l.movhi", [(set GPR:$rd, uimm16hi:$imm)]>;
+def MOVHI : F10_InstWrapper<0x6, 0x0, "l.movhi", [(set GPR:$rd, imm16hi:$imm)]>;
 
 //===----------------------------------------------------------------------===//
 // Format 11 - Move to/from special purpose registers instructions
@@ -267,18 +267,35 @@ def ADJCALLSTACKUP   : Pseudo_Inst<(outs), (ins i32imm:$ra, i32imm:$rb),
 }
 
 //===----------------------------------------------------------------------===//
-// Other patterns
+// XFORM
 //===----------------------------------------------------------------------===//
-//def: Pat<(brcc SETNE, GPR:$ra, GPR:$rb, bb:$imm), (BF (SFNE GPR:$ra, GPR:$rb), bb:$imm)>;
-def: Pat<(simm16:$imm), (ADDI R0, simm16:$imm)>;
+def imm16_hi_XFORM : SDNodeXForm<imm, [{
+  return CurDAG->getTargetConstant((int)N->getSExtValue() & (~0xFFFF), SDLoc(N), MVT::i32);
+}]>;
 
 
+def imm16_lo_XFORM : SDNodeXForm<imm, [{
+  return CurDAG->getTargetConstant((int)N->getSExtValue() & 0xFFFF, SDLoc(N), MVT::i32);
+}]>;
+
+//===----------------------------------------------------------------------===//
+// Other move patterns
+//===----------------------------------------------------------------------===//
+// 16 bit signed immediate moves
+def: Pat<(imm16:$imm), (ORI R0, imm16:$imm)>;
+
+// Match 32-bit bit moves that can't be represented by l.movhi
+def: Pat<(imm32:$imm), (ORI (MOVHI (imm16_hi_XFORM imm32:$imm)), (imm16_lo_XFORM imm32:$imm))>;
+
+//===----------------------------------------------------------------------===//
+// Other branch patterns
+//===----------------------------------------------------------------------===//
+// Conditional (brcc) branches
 multiclass BrccPat<CondCode cc, F9_InstWrapper inst> {
   def : Pat<(brcc cc, GPR:$ra, GPR:$rb, bb:$imm),
             (BF (inst GPR:$ra, GPR:$rb), bb:$imm)>;
 }
 
-// Instantiate the multiclass for each condition
 defm : BrccPat<SETEQ, SFEQ>;
 defm : BrccPat<SETNE, SFNE>;
 defm : BrccPat<SETUGT, SFGTU>;

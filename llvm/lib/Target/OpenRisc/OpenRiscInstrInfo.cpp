@@ -89,11 +89,11 @@ void OpenRiscInstrInfo::adjustStackPtr(unsigned SP, int64_t Amount,
 
   // If immediate is 16-bit, directly add it to stack pointer
   if (isInt<16>(Amount)) { // addi sp, sp, amount
-    BuildMI(MBB, I, DL, get(OpenRisc::ADDI), Reg).addReg(SP).addImm(-Amount);
+    BuildMI(MBB, I, DL, get(OpenRisc::ADDI), Reg).addReg(SP).addImm(Amount);
   } else { // Expand immediate that doesn't fit in 16-bit.
     unsigned Reg1;
     loadImmediate(MBB, I, &Reg1, Amount);
-    BuildMI(MBB, I, DL, get(OpenRisc::SUB), Reg)
+    BuildMI(MBB, I, DL, get(OpenRisc::ADD), Reg)
         .addReg(SP)
         .addReg(Reg1, RegState::Kill);
   }

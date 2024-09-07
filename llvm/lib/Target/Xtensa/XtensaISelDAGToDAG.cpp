@@ -132,5 +132,16 @@ void XtensaDAGToDAGISel::Select(SDNode *Node) {
     return;
   }
 
+  switch (N->getOpcode()) {
+  case ISD::Constant: {
+    uint64_t CVal = N->getAsZExtVal();
+    ReplaceNode(N, CurDAG->getMachineNode(
+                       isInt<12>(CVal) ? ARC::MOV_rs12 : ARC::MOV_rlimm,
+                       SDLoc(N), MVT::i32,
+                       CurDAG->getTargetConstant(CVal, SDLoc(N), MVT::i32)));
+    return;
+  }
+  }
+
   SelectCode(Node);
 }

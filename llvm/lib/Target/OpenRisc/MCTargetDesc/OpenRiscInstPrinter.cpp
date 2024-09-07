@@ -120,32 +120,48 @@ void OpenRiscInstPrinter::printCallOperand(const MCInst *MI, int OpNum,
     llvm_unreachable("Invalid operand");
 }
 
-void OpenRiscInstPrinter::printUImm16High_AsmOperand(const MCInst *MI, int OpNum,
+void OpenRiscInstPrinter::printImm16High_AsmOperand(const MCInst *MI, int OpNum,
                                                    raw_ostream &O) {
   if (MI->getOperand(OpNum).isImm()) {
     // Get the 32-bit immediate value
     int64_t Value = MI->getOperand(OpNum).getImm();
 
-    // Extract the high 16 bits by shifting the value right by 16
-    int64_t High16 = (Value >> 16) & 0xFFFF; // Mask to keep only 16 bits
+    assert(((Value & 0xFFFF) == 0) && "Lower 16-bit not zero");
 
-    // Assert to ensure the high 16 bits are valid
-    assert((High16 >= 0 && High16 <= 65535) && "Invalid high 16-bit value");
-
-    // Output the high 16 bits
-    O << High16;
+    O << "hi(" << Value << ")";
   } else {
     // If not an immediate, fallback to generic operand printing
     printOperand(MI, OpNum, O);
   }
 }
 
-
 void OpenRiscInstPrinter::printSImm16_AsmOperand(const MCInst *MI, int OpNum,
                                               raw_ostream &O) {
   if (MI->getOperand(OpNum).isImm()) {
     int64_t Value = MI->getOperand(OpNum).getImm();
     assert((Value >= -32768 && Value <= 32767) && "Invalid argument");
+    O << Value;
+  } else
+    printOperand(MI, OpNum, O);
+}
+
+void OpenRiscInstPrinter::printImm32_AsmOperand(const MCInst *MI, int OpNum,
+                                              raw_ostream &O) {
+  if (MI->getOperand(OpNum).isImm()) {
+    int64_t Value = MI->getOperand(OpNum).getImm();
+    assert((Value >= -2147483648 && Value <= 4294967295) && "Invalid argument");
+
+    O << Value;
+  } else
+    printOperand(MI, OpNum, O);
+}
+
+void OpenRiscInstPrinter::printImm16_AsmOperand(const MCInst *MI, int OpNum,
+                                              raw_ostream &O) {
+  if (MI->getOperand(OpNum).isImm()) {
+    int64_t Value = MI->getOperand(OpNum).getImm();
+    assert((Value >= -32768 && Value <= 65535) && "Invalid argument");
+
     O << Value;
   } else
     printOperand(MI, OpNum, O);

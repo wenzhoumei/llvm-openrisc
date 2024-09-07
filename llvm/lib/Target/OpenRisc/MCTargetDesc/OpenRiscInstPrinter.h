@@ -48,10 +48,13 @@ private:
   void printBranchTarget(const MCInst *MI, int OpNum, raw_ostream &O);
   void printCallOperand(const MCInst *MI, int OpNum, raw_ostream &O);
 
-  void printUImm16High_AsmOperand(const MCInst *MI, int OpNum, raw_ostream &O);
+  void printImm16High_AsmOperand(const MCInst *MI, int OpNum, raw_ostream &O);
   void printSImm16_AsmOperand(const MCInst *MI, int OpNum, raw_ostream &O);
   void printUImm16_AsmOperand(const MCInst *MI, int OpNum, raw_ostream &O);
   void printUImm5_AsmOperand(const MCInst *MI, int OpNum, raw_ostream &O);
+
+  void printImm32_AsmOperand(const MCInst *MI, int OpNum, raw_ostream &O);
+  void printImm16_AsmOperand(const MCInst *MI, int OpNum, raw_ostream &O);
 };
 } // end namespace llvm
 

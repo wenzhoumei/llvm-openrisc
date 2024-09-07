@@ -29,14 +29,12 @@ define i32 @muli(i32 %a) {
   ret i32 %prod
 }
 
-
-; Test 64-bit add
-define i64 @addc(i64 %a, i64 %b) {
+; Test RR addc
+define i32 @addc(i32 %a, i32 %b) {
 ; CHECK: l.addc
-  %sum = add i64 %a, %b
-  ret i64 %sum
+  %sum = add i32 %a, %b
+  ret i32 %sum
 }
-
 
 ; Test RI division
 define i32 @divi(i32 %a) {
