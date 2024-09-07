@@ -1,4 +1,4 @@
-; RUN: llc -march=openrisc < %s | FileCheck%s
+; RUN: llc -march=openrisc < %s | FileCheck %s
 
 define i32 @compare(i32 %a, i32 %b) {
 ; CHECK: slt
