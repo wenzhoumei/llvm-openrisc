@@ -83,9 +83,9 @@ bool OpenRiscRegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
   // Everything else is referenced relative to whatever register
   // getFrameRegister() returns.
   unsigned FrameReg;
-  if ((FrameIndex >= MinCSFI && FrameIndex <= MaxCSFI))
+  if ((FrameIndex >= MinCSFI && FrameIndex <= MaxCSFI)) // if FrameIndex corresponds to a callee-saved register, select the stack
     FrameReg = OpenRisc::R1;
-  else
+  else // otherwise, select the frame register
     FrameReg = getFrameRegister(MF);
 
   // Calculate final offset.
@@ -97,7 +97,7 @@ bool OpenRiscRegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
   //   incoming argument, callee-saved register location or local variable.
   bool IsKill = false;
   int64_t Offset =
-      SPOffset + (int64_t)StackSize + MI.getOperand(FIOperandNum + 1).getImm();
+      SPOffset + (int64_t)StackSize + MI.getOperand(FIOperandNum - 1).getImm();
 
   bool Valid = isValidAddrOffset(MI, Offset);
 
@@ -122,12 +122,12 @@ bool OpenRiscRegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
   }
 
   MI.getOperand(FIOperandNum).ChangeToRegister(FrameReg, false, false, IsKill);
-  MI.getOperand(FIOperandNum + 1).ChangeToImmediate(Offset);
+  MI.getOperand(FIOperandNum - 1).ChangeToImmediate(Offset);
 
   return false;
 }
 
 Register OpenRiscRegisterInfo::getFrameRegister(const MachineFunction &MF) const {
   const TargetFrameLowering *TFI = MF.getSubtarget().getFrameLowering();
-  return TFI->hasFP(MF) ? OpenRisc::R15 : OpenRisc::R1;
+  return TFI->hasFP(MF) ? OpenRisc::R2 : OpenRisc::R1;
 }
