@@ -65,9 +65,23 @@ def brtarget : Operand<OtherVT> {
   //let ParserMatchClass = XtensaPCRelTargetAsmOperand; TODO
 }
 
-def  calltarget : Operand<iPTR> {
+def calltarget : Operand<iPTR> {
   let PrintMethod = "printCallOperand";
   let EncoderMethod = "getCallEncoding";
   let DecoderMethod = "decodeCallOperand";
+  //let ParserMatchClass = XtensaPCRelTargetAsmOperand;
+}
+
+def hisymtarget : Operand<iPTR> {
+  let PrintMethod = "printHiSymbolOperand";
+  let EncoderMethod = "getHiSymbolEncoding";
+  let DecoderMethod = "decodeHiSymbolOperand";
+  //let ParserMatchClass = XtensaPCRelTargetAsmOperand;
+}
+
+def losymtarget : Operand<iPTR> {
+  let PrintMethod = "printLoSymbolOperand";
+  let EncoderMethod = "getLoSymbolEncoding";
+  let DecoderMethod = "decodeLoSymbolOperand";
   //let ParserMatchClass = XtensaPCRelTargetAsmOperand;
 }

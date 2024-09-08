@@ -40,6 +40,8 @@ enum {
   // the lhs and rhs (ops #0 and #1) of a conditional expression with the
   // condition code in op #4
   SELECT_CC,
+
+  GA_WRAPPER,
 };
 }
 
@@ -76,6 +78,8 @@ public:
   const OpenRiscSubtarget &getSubtarget() const { return Subtarget; }
 private:
   const OpenRiscSubtarget &Subtarget;
+
+  SDValue LowerGlobalAddress(SDValue Op, SelectionDAG &DAG) const;
 };
 
 } // end namespace llvm

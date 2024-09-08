@@ -57,7 +57,7 @@ OpenRiscTargetLowering::OpenRiscTargetLowering(const TargetMachine &TM,
   setOperationAction(ISD::Constant, MVT::i32, Legal);
   setOperationAction(ISD::Constant, MVT::i64, Expand);
 
-  setOperationAction(ISD::GlobalAddress, PtrVT, Legal);
+  setOperationAction(ISD::GlobalAddress, PtrVT, Custom);
 
   setOperationAction(ISD::MUL, MVT::i32, Expand);
   setOperationAction(ISD::SMUL_LOHI, MVT::i32, Expand);
@@ -396,6 +396,8 @@ SDValue OpenRiscTargetLowering::LowerOperation(SDValue Op, SelectionDAG &DAG) co
   switch (Op.getOpcode()) {
   default:
     report_fatal_error("Unexpected node to lower");
+  case ISD::GlobalAddress:
+    return LowerGlobalAddress(Op, DAG);
   }
 }
 
@@ -411,6 +413,21 @@ const char *OpenRiscTargetLowering::getTargetNodeName(unsigned Opcode) const {
     return "OpenRiscISD::RET";
   case OpenRiscISD::SELECT_CC:
     return "OpenRiscISD::SELECT_CC";
+  case OpenRiscISD::GA_WRAPPER:
+    return "OpenRiscISD::GA_WRAPPER";
   }
   return nullptr;
+}
+
+SDValue OpenRiscTargetLowering::LowerGlobalAddress(SDValue Op,
+                                              SelectionDAG &DAG) const {
+  auto DL = DAG.getDataLayout();
+
+  const GlobalValue *GV = cast<GlobalAddressSDNode>(Op)->getGlobal();
+  int64_t Offset = cast<GlobalAddressSDNode>(Op)->getOffset();
+
+  // Create the TargetGlobalAddress node, folding in the constant offset.
+  SDValue Result =
+      DAG.getTargetGlobalAddress(GV, SDLoc(Op), getPointerTy(DL), Offset);
+  return DAG.getNode(OpenRiscISD::GA_WRAPPER, SDLoc(Op), getPointerTy(DL), Result);
 }

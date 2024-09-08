@@ -281,11 +281,23 @@ def imm16_lo_XFORM : SDNodeXForm<imm, [{
 //===----------------------------------------------------------------------===//
 // Other move patterns
 //===----------------------------------------------------------------------===//
-// 16 bit signed immediate moves
-def: Pat<(imm16:$imm), (ORI R0, imm16:$imm)>;
 
-// Match 32-bit bit moves that can't be represented by l.movhi
-def: Pat<(imm32:$imm), (ORI (MOVHI (imm16_hi_XFORM imm32:$imm)), (imm16_lo_XFORM imm32:$imm))>;
+def MOVLO_SYM : F2_Inst<0x2a, 
+                        (outs GPR:$rd), (ins GPR:$ra, losymtarget:$imm),
+                        "ori $rd, $ra, $imm", []>;
+def MOVHI_SYM : F10_Inst<0x6, 0x0,
+                        (outs GPR:$rd), (ins hisymtarget:$imm),
+                         "l.movhi $rd, $imm", []>;
+
+// Symbol moves
+def : Pat<(OpenRisc_ga_wrapper tglobaladdr:$addr), (MOVLO_SYM (MOVHI_SYM (tglobaladdr:$addr)), (tglobaladdr:$addr))>;
+def : Pat<(OpenRisc_ga_wrapper texternalsym:$addr), (MOVLO_SYM (MOVHI_SYM (texternalsym:$addr)), (texternalsym:$addr))>;
+
+// 16 bit immediate moves
+def : Pat<(imm16:$imm), (ORI R0, imm16:$imm)>;
+
+// 32-bit bit moves that can't be represented by l.movhi
+def : Pat<(imm32:$imm), (ORI (MOVHI (imm16_hi_XFORM imm32:$imm)), (imm16_lo_XFORM imm32:$imm))>;
 
 //===----------------------------------------------------------------------===//
 // Other branch patterns
@@ -306,3 +318,6 @@ defm : BrccPat<SETGT, SFGTS>;
 defm : BrccPat<SETGE, SFGES>;
 defm : BrccPat<SETLT, SFLTS>;
 defm : BrccPat<SETLE, SFLES>;
+//===----------------------------------------------------------------------===//
+// Other
+//===----------------------------------------------------------------------===//

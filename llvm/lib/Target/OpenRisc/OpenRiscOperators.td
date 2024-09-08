@@ -44,3 +44,5 @@ def OpenRisc_callseq_end  : SDNode<"ISD::CALLSEQ_END",   SDT_OpenRiscCallSeqEnd,
 
 def OpenRisc_select_cc: SDNode<"OpenRiscISD::SELECT_CC", SDT_OpenRiscSelectCC,
                             [SDNPInGlue]>;
+
+def OpenRisc_ga_wrapper : SDNode<"OpenRiscISD::GA_WRAPPER", SDT_OpenRiscWrapPtr>;

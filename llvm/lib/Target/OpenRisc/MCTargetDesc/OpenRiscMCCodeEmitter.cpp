@@ -66,8 +66,16 @@ private:
   uint32_t getCallEncoding(const MCInst &MI, unsigned int OpNum,
                            SmallVectorImpl<MCFixup> &Fixups,
                            const MCSubtargetInfo &STI) const;
-
+                           
   uint32_t getMemRegEncoding(const MCInst &MI, unsigned OpNo,
+                             SmallVectorImpl<MCFixup> &Fixups,
+                             const MCSubtargetInfo &STI) const;
+
+  uint32_t getHiSymbolEncoding(const MCInst &MI, unsigned OpNo,
+                             SmallVectorImpl<MCFixup> &Fixups,
+                             const MCSubtargetInfo &STI) const;
+
+  uint32_t getLoSymbolEncoding(const MCInst &MI, unsigned OpNo,
                              SmallVectorImpl<MCFixup> &Fixups,
                              const MCSubtargetInfo &STI) const;
 };
@@ -168,5 +176,22 @@ OpenRiscMCCodeEmitter::getMemRegEncoding(const MCInst &MI, unsigned OpNo,
 
   return ((OffBits & 0xFF0) | RegBits);
 }
+
+uint32_t
+OpenRiscMCCodeEmitter::getHiSymbolEncoding(const MCInst &MI, unsigned int OpNum,
+                                     SmallVectorImpl<MCFixup> &Fixups,
+                                     const MCSubtargetInfo &STI) const {
+  // TODO
+  return 0;
+}
+
+uint32_t
+OpenRiscMCCodeEmitter::getLoSymbolEncoding(const MCInst &MI, unsigned int OpNum,
+                                     SmallVectorImpl<MCFixup> &Fixups,
+                                     const MCSubtargetInfo &STI) const {
+  // TODO
+  return 0;
+}
+
 
 #include "OpenRiscGenMCCodeEmitter.inc"
