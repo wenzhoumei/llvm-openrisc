@@ -76,10 +76,20 @@ public:
                       SelectionDAG &DAG) const override;
 
   const OpenRiscSubtarget &getSubtarget() const { return Subtarget; }
+
+  MachineBasicBlock *
+  EmitInstrWithCustomInserter(MachineInstr &MI,
+                              MachineBasicBlock *MBB) const override;
+
+
+
 private:
   const OpenRiscSubtarget &Subtarget;
 
   SDValue LowerGlobalAddress(SDValue Op, SelectionDAG &DAG) const;
+  SDValue LowerSelectCC(SDValue Op, SelectionDAG &DAG) const;
+
+  MachineBasicBlock *expandSelectCC(MachineInstr &MI, MachineBasicBlock *BB) const;
 };
 
 } // end namespace llvm

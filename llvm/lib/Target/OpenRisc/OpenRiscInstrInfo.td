@@ -11,7 +11,6 @@
 // This file describes the OpenRisc instructions in TableGen format.
 //
 //===----------------------------------------------------------------------===//
-
 include "OpenRiscInstrFormats.td"
 include "OpenRiscOperands.td"
 include "OpenRiscOperators.td"
@@ -113,11 +112,6 @@ def BNF : F6_InstWrapper<0x3, "l.bnf", [], (ins SR:$sr, brtarget:$imm)>;
 def BF  : F6_InstWrapper<0x4, "l.bf", [], (ins SR:$sr, brtarget:$imm)>;
 }
 
-def: Pat<(brcond (seteq SR:$sr, 0), bb:$imm), (BNF SR:$sr, bb:$imm)>;
-def: Pat<(brcond (seteq SR:$sr, 1), bb:$imm), (BF SR:$sr, bb:$imm)>;
-
-def : Pat<(OpenRisc_call tglobaladdr:$imm), (JAL $imm)>;
-def : Pat<(OpenRisc_call texternalsym:$imm), (JAL $imm)>;
 
 //===----------------------------------------------------------------------===//
 // Format 7 - Load instructions
@@ -160,7 +154,7 @@ class F9_InstWrapper<bits<11> opcode,
                      InstrItinClass itin = NoItinerary> :
     F9_Inst<opcode,
             (outs SR:$sr), (ins GPR:$ra, GPR:$rb),
-            opcodeAsm#" $ra, $rb", [(set SR:$sr, (setcc GPR:$ra, GPR:$rb, cc))],
+            opcodeAsm#" $ra, $rb", [/*(set SR:$sr, (setcc GPR:$ra, GPR:$rb, cc))*/],
             itin>;
 
 def SFEQ  : F9_InstWrapper<0x720, "l.sfeq", SETEQ>;
@@ -250,20 +244,23 @@ def RET : F5_Inst<0x11, (outs), (ins),
 }
 }
 
+//def: Pat<(brcond (seteq SR:$sr, 0), bb:$imm), (BNF SR:$sr, bb:$imm)>;
+//def: Pat<(brcond (seteq SR:$sr, 1), bb:$imm), (BF SR:$sr, bb:$imm)>;
+
+def : Pat<(OpenRisc_call tglobaladdr:$imm), (JAL $imm)>;
+def : Pat<(OpenRisc_call texternalsym:$imm), (JAL $imm)>;
+
 //===----------------------------------------------------------------------===//
 // Stack allocation
 //===----------------------------------------------------------------------===//
-
-// ADJCALLSTACKDOWN/UP implicitly use/def SP because they may be expanded into
-// a stack adjustment and the codegen must know that they may modify the stack
-// pointer before prolog-epilog rewriting occurs.
 let Defs = [R1], Uses = [R1] in {
 def ADJCALLSTACKDOWN : Pseudo_Inst<(outs), (ins i32imm:$ra, i32imm:$rb),
-                        "#ADJCALLSTACKDOWN",
-                        [(OpenRisc_callseq_start timm:$ra, timm:$rb)]>;
+                                   "#ADJCALLSTACKDOWN",
+                                   [(OpenRisc_callseq_start timm:$ra, timm:$rb)]>;
+
 def ADJCALLSTACKUP   : Pseudo_Inst<(outs), (ins i32imm:$ra, i32imm:$rb),
-                        "#ADJCALLSTACKUP",
-                        [(OpenRisc_callseq_end timm:$ra, timm:$rb)]>;
+                                   "#ADJCALLSTACKUP",
+                                   [(OpenRisc_callseq_end timm:$ra, timm:$rb)]>;
 }
 
 //===----------------------------------------------------------------------===//
@@ -281,7 +278,6 @@ def imm16_lo_XFORM : SDNodeXForm<imm, [{
 //===----------------------------------------------------------------------===//
 // Other move patterns
 //===----------------------------------------------------------------------===//
-
 def MOVLO_SYM : F2_Inst<0x2a, 
                         (outs GPR:$rd), (ins GPR:$ra, losymtarget:$imm),
                         "ori $rd, $ra, $imm", []>;
@@ -303,9 +299,9 @@ def : Pat<(imm32:$imm), (ORI (MOVHI (imm16_hi_XFORM imm32:$imm)), (imm16_lo_XFOR
 // Other branch patterns
 //===----------------------------------------------------------------------===//
 // Conditional (brcc) branches
-multiclass BrccPat<CondCode cc, F9_InstWrapper inst> {
+multiclass BrccPat<CondCode cc, F9_InstWrapper INST> {
   def : Pat<(brcc cc, GPR:$ra, GPR:$rb, bb:$imm),
-            (BF (inst GPR:$ra, GPR:$rb), bb:$imm)>;
+            (BF (INST GPR:$ra, GPR:$rb), bb:$imm)>;
 }
 
 defm : BrccPat<SETEQ, SFEQ>;
@@ -318,6 +314,13 @@ defm : BrccPat<SETGT, SFGTS>;
 defm : BrccPat<SETGE, SFGES>;
 defm : BrccPat<SETLT, SFLTS>;
 defm : BrccPat<SETLE, SFLES>;
+
 //===----------------------------------------------------------------------===//
 // Other
 //===----------------------------------------------------------------------===//
+let usesCustomInserter = 1 in {
+def SELECT_CC
+: Pseudo_Inst<(outs GPR:$rd), (ins GPR:$ra, GPR:$rb, GPR:$T, GPR:$F, imm32:$cc),
+              "; SELECT_CC PSEUDO!",
+              [(set GPR:$rd, (OpenRisc_select_cc GPR:$ra, GPR:$rb, GPR:$T, GPR:$F, imm32:$cc))]>;
+}

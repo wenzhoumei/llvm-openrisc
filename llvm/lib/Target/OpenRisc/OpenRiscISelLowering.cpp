@@ -72,6 +72,10 @@ OpenRiscTargetLowering::OpenRiscTargetLowering(const TargetMachine &TM,
   setOperationAction(ISD::SIGN_EXTEND_INREG, MVT::i8, Expand);
   setOperationAction(ISD::SIGN_EXTEND_INREG, MVT::i16, Expand);
 
+  setOperationAction(ISD::SETCC, MVT::i32, Expand);
+  setOperationAction(ISD::SELECT_CC, MVT::i32, Custom);
+
+
   // Compute derived properties from the register classes
   computeRegisterProperties(STI.getRegisterInfo());
 }
@@ -398,6 +402,8 @@ SDValue OpenRiscTargetLowering::LowerOperation(SDValue Op, SelectionDAG &DAG) co
     report_fatal_error("Unexpected node to lower");
   case ISD::GlobalAddress:
     return LowerGlobalAddress(Op, DAG);
+  case ISD::SELECT_CC:
+    return LowerSelectCC(Op, DAG);
   }
 }
 
@@ -419,8 +425,7 @@ const char *OpenRiscTargetLowering::getTargetNodeName(unsigned Opcode) const {
   return nullptr;
 }
 
-SDValue OpenRiscTargetLowering::LowerGlobalAddress(SDValue Op,
-                                              SelectionDAG &DAG) const {
+SDValue OpenRiscTargetLowering::LowerGlobalAddress(SDValue Op, SelectionDAG &DAG) const {
   auto DL = DAG.getDataLayout();
 
   const GlobalValue *GV = cast<GlobalAddressSDNode>(Op)->getGlobal();
@@ -430,4 +435,123 @@ SDValue OpenRiscTargetLowering::LowerGlobalAddress(SDValue Op,
   SDValue Result =
       DAG.getTargetGlobalAddress(GV, SDLoc(Op), getPointerTy(DL), Offset);
   return DAG.getNode(OpenRiscISD::GA_WRAPPER, SDLoc(Op), getPointerTy(DL), Result);
+}
+
+SDValue OpenRiscTargetLowering::LowerSelectCC(SDValue Op, SelectionDAG &DAG) const {
+  SDValue LHS = Op.getOperand(0);
+  SDValue RHS = Op.getOperand(1);
+  ISD::CondCode CC = cast<CondCodeSDNode>(Op.getOperand(4))->get();
+  SDValue TrueVal = Op.getOperand(2);
+  SDValue FalseVal = Op.getOperand(3);
+  SDLoc dl(Op);
+  unsigned OpenRiscCC = (unsigned) CC;
+
+  return DAG.getNode(OpenRiscISD::SELECT_CC, dl, TrueVal.getValueType(), LHS, RHS, TrueVal, FalseVal,
+                     DAG.getConstant(OpenRiscCC, dl, MVT::i32));
+}
+
+MachineBasicBlock *
+OpenRiscTargetLowering::EmitInstrWithCustomInserter(MachineInstr &MI,
+                                                 MachineBasicBlock *BB) const {
+  switch (MI.getOpcode()) {
+  default: llvm_unreachable("Unknown SELECT_CC!");
+  case OpenRisc::SELECT_CC:
+    return expandSelectCC(MI, BB);
+  }
+}
+
+MachineBasicBlock *
+OpenRiscTargetLowering::expandSelectCC(MachineInstr &MI, MachineBasicBlock *BB) const {
+  const TargetInstrInfo &TII = *Subtarget.getInstrInfo();
+  DebugLoc dl = MI.getDebugLoc();
+  unsigned CC = MI.getOperand(5).getImm();
+
+  // To "insert" a SELECT_CC instruction, we actually have to insert the
+  // triangle control-flow pattern. The incoming instruction knows the
+  // destination vreg to set, the condition code register to branch on, the
+  // true/false values to select between, and the condition code for the branch.
+  //
+  // We produce the following control flow:
+  //     ThisMBB
+  //     |  \
+  //     |  IfFalseMBB
+  //     | /
+  //    SinkMBB
+  const BasicBlock *LLVM_BB = BB->getBasicBlock();
+  MachineFunction::iterator It = ++BB->getIterator();
+
+  MachineBasicBlock *ThisMBB = BB;
+  MachineFunction *F = BB->getParent();
+  MachineBasicBlock *IfFalseMBB = F->CreateMachineBasicBlock(LLVM_BB);
+  MachineBasicBlock *SinkMBB = F->CreateMachineBasicBlock(LLVM_BB);
+  F->insert(It, IfFalseMBB);
+  F->insert(It, SinkMBB);
+
+  // Transfer the remainder of ThisMBB and its successor edges to SinkMBB.
+  SinkMBB->splice(SinkMBB->begin(), ThisMBB,
+                  std::next(MachineBasicBlock::iterator(MI)), ThisMBB->end());
+  SinkMBB->transferSuccessorsAndUpdatePHIs(ThisMBB);
+
+  // Set the new successors for ThisMBB.
+  ThisMBB->addSuccessor(IfFalseMBB);
+  ThisMBB->addSuccessor(SinkMBB);
+
+  unsigned CondSetOpcode;
+  switch (CC) {
+    case ISD::SETEQ:
+      CondSetOpcode = OpenRisc::SFEQ; // Replace OpenRisc with your target's namespace
+      break;
+    case ISD::SETNE:
+      CondSetOpcode = OpenRisc::SFNE;
+      break;
+    case ISD::SETUGT:
+      CondSetOpcode = OpenRisc::SFGTU;
+      break;
+    case ISD::SETUGE:
+      CondSetOpcode = OpenRisc::SFGEU;
+      break;
+    case ISD::SETULT:
+      CondSetOpcode = OpenRisc::SFLTU;
+      break;
+    case ISD::SETULE:
+      CondSetOpcode = OpenRisc::SFLEU;
+      break;
+    case ISD::SETGT:
+      CondSetOpcode = OpenRisc::SFGTS;
+      break;
+    case ISD::SETGE:
+      CondSetOpcode = OpenRisc::SFGES;
+      break;
+    case ISD::SETLT:
+      CondSetOpcode = OpenRisc::SFLTS;
+      break;
+    case ISD::SETLE:
+      CondSetOpcode = OpenRisc::SFLES;
+      break;
+    default:
+      llvm_unreachable("Unsupported condition code");
+  }
+  
+  BuildMI(ThisMBB, dl, TII.get(CondSetOpcode))
+    .addReg(OpenRisc::SRReg)
+    .addReg(MI.getOperand(1).getReg())
+    .addReg(MI.getOperand(2).getReg());
+
+  BuildMI(ThisMBB, dl, TII.get(OpenRisc::BF))
+    .addReg(OpenRisc::SRReg)
+    .addMBB(SinkMBB);
+
+  // IfFalseMBB just falls through to SinkMBB.
+  IfFalseMBB->addSuccessor(SinkMBB);
+
+  // %Result = phi [ %TrueValue, ThisMBB ], [ %FalseValue, IfFalseMBB ]
+  BuildMI(*SinkMBB, SinkMBB->begin(), dl, TII.get(OpenRisc::PHI),
+          MI.getOperand(0).getReg())
+      .addReg(MI.getOperand(3).getReg())
+      .addMBB(ThisMBB)
+      .addReg(MI.getOperand(4).getReg())
+      .addMBB(IfFalseMBB);
+
+  MI.eraseFromParent(); // The pseudo instruction is gone now.
+  return SinkMBB;
 }

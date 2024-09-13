@@ -7,7 +7,6 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===--------------------------------------------------------------------------===//
-
 // Base class for OpenRisc instructions
 class OpenRisc_Inst<dag outs, dag ins, string asmStr, list<dag> pattern,
                     InstrItinClass itin = NoItinerary>
