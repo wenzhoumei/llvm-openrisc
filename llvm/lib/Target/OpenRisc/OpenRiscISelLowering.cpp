@@ -62,6 +62,8 @@ OpenRiscTargetLowering::OpenRiscTargetLowering(const TargetMachine &TM,
   setOperationAction(ISD::MUL, MVT::i32, Expand);
   setOperationAction(ISD::SMUL_LOHI, MVT::i32, Expand);
   setOperationAction(ISD::UMUL_LOHI, MVT::i32, Expand);
+  setOperationAction(ISD::MULHS, MVT::i32, Expand);
+  setOperationAction(ISD::MULHU, MVT::i32, Expand);
 
   setOperationAction(ISD::SDIV, MVT::i32, Expand);
   setOperationAction(ISD::SDIVREM, MVT::i32, Expand);
@@ -74,7 +76,6 @@ OpenRiscTargetLowering::OpenRiscTargetLowering(const TargetMachine &TM,
 
   setOperationAction(ISD::SETCC, MVT::i32, Expand);
   setOperationAction(ISD::SELECT_CC, MVT::i32, Custom);
-
 
   // Compute derived properties from the register classes
   computeRegisterProperties(STI.getRegisterInfo());
