@@ -31,7 +31,7 @@ extern "C" LLVM_EXTERNAL_VISIBILITY void LLVMInitializeOpenRiscTarget() {
 static std::string computeDataLayout(const Triple &TT, StringRef CPU,
                                      const TargetOptions &Options,
                                      bool IsLittle) {
-  std::string Ret = "e-m:e-p:32-i8:8-i16:16-i64:64:32-f32:32-f64:64:32-n32";
+  std::string Ret = "e-m:e-p:32:32-i8:8-i16:16-i64:32:64-f32:32-f64:32:64-n32";
   return Ret;
 }
 
