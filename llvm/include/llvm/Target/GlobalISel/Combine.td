@@ -1857,6 +1857,43 @@ def anyext_of_anyext : ext_of_ext_opcodes<G_ANYEXT, G_ANYEXT>;
 def anyext_of_zext : ext_of_ext_opcodes<G_ANYEXT, G_ZEXT>;
 def anyext_of_sext : ext_of_ext_opcodes<G_ANYEXT, G_SEXT>;
 
+// Push cast through build vector.
+class buildvector_of_opcode<Instruction castOpcode> : GICombineRule <
+  (defs root:$root, build_fn_matchinfo:$matchinfo),
+  (match (G_BUILD_VECTOR $bv, GIVariadic<>:$unused):$Build,
+         (castOpcode $root, $bv):$Cast,
+         [{ return Helper.matchCastOfBuildVector(*${Cast}, *${Build}, ${matchinfo}); }]),
+  (apply [{ Helper.applyBuildFn(*${Cast}, ${matchinfo}); }])>;
+
+def buildvector_of_truncate : buildvector_of_opcode<G_TRUNC>;
+
+// narrow binop.
+// trunc (binop X, C) --> binop (trunc X, trunc C)
+class narrow_binop_opcode<Instruction binopOpcode> : GICombineRule <
+  (defs root:$root, build_fn_matchinfo:$matchinfo),
+  (match (G_CONSTANT $const, $imm),
+         (binopOpcode $binop, $x, $const):$Binop,
+         (G_TRUNC $root, $binop):$Trunc,
+         [{ return Helper.matchNarrowBinop(*${Trunc}, *${Binop}, ${matchinfo}); }]),
+  (apply [{ Helper.applyBuildFn(*${Trunc}, ${matchinfo}); }])>;
+
+def narrow_binop_add : narrow_binop_opcode<G_ADD>;
+def narrow_binop_sub : narrow_binop_opcode<G_SUB>;
+def narrow_binop_mul : narrow_binop_opcode<G_MUL>;
+def narrow_binop_and : narrow_binop_opcode<G_AND>;
+def narrow_binop_or  : narrow_binop_opcode<G_OR>;
+def narrow_binop_xor : narrow_binop_opcode<G_XOR>;
+
+// Cast of integer.
+class integer_of_opcode<Instruction castOpcode> : GICombineRule <
+  (defs root:$root, apint_matchinfo:$matchinfo),
+  (match (G_CONSTANT $int, $imm),
+         (castOpcode $root, $int):$Cast,
+         [{ return Helper.matchCastOfInteger(*${Cast}, ${matchinfo}); }]),
+  (apply [{ Helper.replaceInstWithConstant(*${Cast}, ${matchinfo}); }])>;
+
+def integer_of_truncate : integer_of_opcode<G_TRUNC>;
+
 def cast_combines: GICombineGroup<[
   truncate_of_zext,
   truncate_of_sext,
@@ -1870,7 +1907,15 @@ def cast_combines: GICombineGroup<[
   sext_of_anyext,
   anyext_of_anyext,
   anyext_of_zext,
-  anyext_of_sext
+  anyext_of_sext,
+  buildvector_of_truncate,
+  narrow_binop_add,
+  narrow_binop_sub,
+  narrow_binop_mul,
+  narrow_binop_and,
+  narrow_binop_or,
+  narrow_binop_xor,
+  integer_of_truncate
 ]>;
 
 

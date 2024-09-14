@@ -831,6 +831,12 @@ public:
   /// Combine ors.
   bool matchOr(MachineInstr &MI, BuildFnTy &MatchInfo);
 
+  /// trunc (binop X, C) --> binop (trunc X, trunc C).
+  bool matchNarrowBinop(const MachineInstr &TruncMI,
+                        const MachineInstr &BinopMI, BuildFnTy &MatchInfo);
+
+  bool matchCastOfInteger(const MachineInstr &CastMI, APInt &MatchInfo);
+
   /// Combine addos.
   bool matchAddOverflow(MachineInstr &MI, BuildFnTy &MatchInfo);
 
@@ -899,6 +905,9 @@ public:
 
   bool matchExtOfExt(const MachineInstr &FirstMI, const MachineInstr &SecondMI,
                      BuildFnTy &MatchInfo);
+
+  bool matchCastOfBuildVector(const MachineInstr &CastMI,
+                              const MachineInstr &BVMI, BuildFnTy &MatchInfo);
 
 private:
   /// Checks for legality of an indexed variant of \p LdSt.
