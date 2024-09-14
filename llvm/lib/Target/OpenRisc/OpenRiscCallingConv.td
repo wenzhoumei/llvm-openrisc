@@ -20,8 +20,7 @@ def CC_OpenRisc : CallingConv<[
 ]>;
 
 def RetCC_OpenRisc : CallingConv<[
-  CCIfType<[i32], CCAssignToReg<[R11]>>,
-  CCIfType<[i64], CCAssignToReg<[R11, R12]>>,
+  CCIfType<[i32], CCAssignToReg<[R11, R12]>>,
 ]>;
 
 def CSR_OpenRisc : CalleeSavedRegs<(add R14,R16,R18,R20,R22,R24,R26,R28,R30)>;
