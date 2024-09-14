@@ -63,10 +63,10 @@ class OpenRiscAsmParser : public MCTargetAsmParser {
 
   ParseStatus parseImmediate(OperandVector &Operands);
   ParseStatus parseRegister(OperandVector &Operands, bool AllowParens = false,
-                            bool SR = false);
+                            bool FFlag = false);
   ParseStatus parseOperandWithModifier(OperandVector &Operands);
   bool parseOperand(OperandVector &Operands, StringRef Mnemonic,
-                    bool SR = false);
+                    bool FFlag = false);
   bool ParseInstructionWithSR(ParseInstructionInfo &Info, StringRef Name,
                               SMLoc NameLoc, OperandVector &Operands);
   ParseStatus tryParseRegister(MCRegister &Reg, SMLoc &StartLoc,
@@ -461,7 +461,7 @@ bool OpenRiscAsmParser::parseRegister(MCRegister &Reg, SMLoc &StartLoc,
 }
 
 ParseStatus OpenRiscAsmParser::parseRegister(OperandVector &Operands,
-                                           bool AllowParens, bool SR) {
+                                           bool AllowParens, bool FFlag) {
   SMLoc FirstS = getLoc();
   bool HadParens = false;
   AsmToken Buf[2];
@@ -471,7 +471,7 @@ ParseStatus OpenRiscAsmParser::parseRegister(OperandVector &Operands,
   if (AllowParens && getLexer().is(AsmToken::LParen)) {
     size_t ReadCount = getLexer().peekTokens(Buf);
     if (ReadCount == 2 && Buf[1].getKind() == AsmToken::RParen) {
-      if ((Buf[0].getKind() == AsmToken::Integer) && (!SR))
+      if ((Buf[0].getKind() == AsmToken::Integer) && (!FFlag))
         return ParseStatus::NoMatch;
       HadParens = true;
       getParser().Lex(); // Eat '('
@@ -484,7 +484,7 @@ ParseStatus OpenRiscAsmParser::parseRegister(OperandVector &Operands,
   default:
     return ParseStatus::NoMatch;
   case AsmToken::Integer:
-    if (!SR)
+    if (!FFlag)
       return ParseStatus::NoMatch;
     RegName = getLexer().getTok().getString();
     RegNo = MatchRegisterName(RegName);
@@ -562,7 +562,7 @@ ParseStatus OpenRiscAsmParser::parseOperandWithModifier(OperandVector &Operands)
 /// from this information, adding to Operands.
 /// If operand was parsed, returns false, else true.
 bool OpenRiscAsmParser::parseOperand(OperandVector &Operands, StringRef Mnemonic,
-                                   bool SR) {
+                                   bool FFlag) {
   // Check if the current operand has a custom associated parser, if so, try to
   // custom parse the operand, or fallback to the general approach.
   ParseStatus Res = MatchOperandParserImpl(Operands, Mnemonic);
@@ -576,7 +576,7 @@ bool OpenRiscAsmParser::parseOperand(OperandVector &Operands, StringRef Mnemonic
     return true;
 
   // Attempt to parse token as register
-  if (parseRegister(Operands, true, SR).isSuccess())
+  if (parseRegister(Operands, true, FFlag).isSuccess())
     return false;
 
   // Attempt to parse token as an immediate
@@ -593,7 +593,7 @@ bool OpenRiscAsmParser::ParseInstructionWithSR(ParseInstructionInfo &Info,
   if ((Name.starts_with("wsr.") || Name.starts_with("rsr.") ||
        Name.starts_with("xsr.")) &&
       (Name.size() > 4)) {
-    // Parse case when instruction name is concatenated with SR register
+    // Parse case when instruction name is concatenated with FFlag register
     // name, like "wsr.sar a1"
 
     // First operand is token for instruction

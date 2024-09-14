@@ -534,12 +534,12 @@ OpenRiscTargetLowering::expandSelectCC(MachineInstr &MI, MachineBasicBlock *BB) 
   }
   
   BuildMI(ThisMBB, dl, TII.get(CondSetOpcode))
-    .addReg(OpenRisc::SRReg)
+    .addReg(OpenRisc::FFlagPReg)
     .addReg(MI.getOperand(1).getReg())
     .addReg(MI.getOperand(2).getReg());
 
   BuildMI(ThisMBB, dl, TII.get(OpenRisc::BF))
-    .addReg(OpenRisc::SRReg)
+    .addReg(OpenRisc::FFlagPReg)
     .addMBB(SinkMBB);
 
   // IfFalseMBB just falls through to SinkMBB.

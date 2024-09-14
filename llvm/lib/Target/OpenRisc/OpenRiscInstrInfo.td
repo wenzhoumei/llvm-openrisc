@@ -108,8 +108,8 @@ class F6_InstWrapper<bits<6> opcode,
 let isBranch = 1, isTerminator = 1 in {
 def J   : F6_InstWrapper<0x0, "l.j", [(br bb:$imm)], (ins brtarget:$imm)>;
 def JAL : F6_InstWrapper<0x1, "l.jal", [], (ins calltarget:$imm)>;
-def BNF : F6_InstWrapper<0x3, "l.bnf", [], (ins SR:$sr, brtarget:$imm)>;
-def BF  : F6_InstWrapper<0x4, "l.bf", [], (ins SR:$sr, brtarget:$imm)>;
+def BNF : F6_InstWrapper<0x3, "l.bnf", [], (ins FFlag:$ff, brtarget:$imm)>;
+def BF  : F6_InstWrapper<0x4, "l.bf", [], (ins FFlag:$ff, brtarget:$imm)>;
 }
 
 
@@ -153,7 +153,7 @@ class F9_InstWrapper<bits<11> opcode,
                      string opcodeAsm,
                      InstrItinClass itin = NoItinerary> :
     F9_Inst<opcode,
-            (outs SR:$sr), (ins GPR:$ra, GPR:$rb),
+            (outs FFlag:$ff), (ins GPR:$ra, GPR:$rb),
             opcodeAsm#" $ra, $rb", [],
             itin>;
 
@@ -244,8 +244,8 @@ def RET : F5_Inst<0x11, (outs), (ins),
 }
 }
 
-//def: Pat<(brcond (seteq SR:$sr, 0), bb:$imm), (BNF SR:$sr, bb:$imm)>;
-//def: Pat<(brcond (seteq SR:$sr, 1), bb:$imm), (BF SR:$sr, bb:$imm)>;
+//def: Pat<(brcond (seteq FFlag:$sr, 0), bb:$imm), (BNF FFlag:$sr, bb:$imm)>;
+//def: Pat<(brcond (seteq FFlag:$sr, 1), bb:$imm), (BF FFlag:$sr, bb:$imm)>;
 
 def : Pat<(OpenRisc_call tglobaladdr:$imm), (JAL $imm)>;
 def : Pat<(OpenRisc_call texternalsym:$imm), (JAL $imm)>;
