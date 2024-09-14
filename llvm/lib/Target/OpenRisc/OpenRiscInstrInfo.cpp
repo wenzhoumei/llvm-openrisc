@@ -106,7 +106,8 @@ void OpenRiscInstrInfo::adjustStackPtr(unsigned SP, int64_t Amount,
 void OpenRiscInstrInfo::copyPhysReg(MachineBasicBlock &MBB,
                                   MachineBasicBlock::iterator MBBI,
                                   const DebugLoc &DL, MCRegister DestReg,
-                                  MCRegister SrcReg, bool KillSrc) const {
+                                  MCRegister SrcReg, bool KillSrc,
+                                  bool RenamableDest, bool RenamableSrc) const {
   // The MOV instruction is not present in core ISA,
   // so use OR instruction.
   if (OpenRisc::GPRRegClass.contains(DestReg, SrcReg))
