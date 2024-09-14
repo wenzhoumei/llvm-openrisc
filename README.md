@@ -1,3 +1,59 @@
+# LLVM OpenRISC Backend
+
+This project provides a backend for the OpenRISC architecture, specifically targeting the ORBIS32 class 1 instruction set.
+
+The current implementation supports only integer operations, with plans to add floating-point support in the future.
+
+## Features
+
+- ORBIS32 class 1 instruction set support
+- No floating-point support (planned for future releases)
+- Custom backend implementation for OpenRISC in LLVM
+
+## Setup and Compilation
+
+### Requirements
+
+- LLVM 16.0 or higher
+- CMake 3.13 or higher
+- Ninja (optional but recommended for faster builds)
+
+### Steps to Compile
+
+1. Clone the LLVM project and this backend:
+   \```
+   git clone https://github.com/llvm/llvm-project.git
+   cd llvm-project
+   \```
+
+2. Create a build directory:
+   \```
+   mkdir build
+   cd build
+   \```
+
+3. Configure the build:
+   \```
+   cmake -G Ninja -DLLVM_ENABLE_PROJECTS="clang" -DLLVM_TARGETS_TO_BUILD="OpenRisc" ../llvm
+   \```
+
+4. Build the project:
+   \```
+   ninja -v -j8 bin//llc
+   \```
+
+### Usage
+To compile code using llc for the OpenRISC backend, use the following command:
+   \```
+   llc -march=openrisc -filetype=obj -o output.o input.ll
+   \```
+
+### Running Tests
+The tests for this backend are located under the following directory:
+   \```
+   llvm-openrisc/llvm/test/CodeGen/OpenRisc
+   \```
+
 # The LLVM Compiler Infrastructure
 
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/llvm/llvm-project/badge)](https://securityscorecards.dev/viewer/?uri=github.com/llvm/llvm-project)
