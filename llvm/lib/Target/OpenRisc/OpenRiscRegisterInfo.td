@@ -17,8 +17,6 @@ class OpenRiscReg<string n> : Register<n> {
 // General-purpose registers
 //===----------------------------------------------------------------------===//
 
-// Base class for special purpose registers identified by 5-bit group and 10-bit register number
-
 // OpenRisc general-purpose registers identified by 5 bit 
 class GPRReg<bits<5> num, string n, list<string> alt = []> : OpenRiscReg<n> {
   let HWEncoding{4-0} = num;
@@ -109,23 +107,23 @@ def FPCSRReg: SPR<0, 20, "FPCSR">;  // FP Control Status register
 
 // Exception PC, EA, and SR registers (0-15)
 foreach i = 0-15 in {
-  def EPCR#i : SPR<0, !add(32,i), "EPCR"#i>;
-  def EEAR#i : SPR<0, !add(48,i), "EEAR"#i>;
-  def ESR#i : SPR<0, !add(64,i), "ESR"#i>;
+  def EPCRReg#i : SPR<0, !add(32,i), "EPCR"#i>;
+  def EEARReg#i : SPR<0, !add(48,i), "EEAR"#i>;
+  def ESRReg#i : SPR<0, !add(64,i), "ESR"#i>;
 }
 
 // Implementation-specific registers (ISR0-ISR7)
 foreach i = 0-7 in {
-  def ISR#i : SPR<0, !add(21,i), "ISR"#i>;
+  def ISRReg#i : SPR<0, !add(21,i), "ISR"#i>;
 }
 
 // Core and Core Count registers
-def COREID : SPR<0, 128, "COREID">;   // Core Identifier Register
-def NUMCORES : SPR<0, 129, "NUMCORES">;   // Number of Cores Register
+def COREIDReg : SPR<0, 128, "COREID">;   // Core Identifier Register
+def NUMCORESReg : SPR<0, 129, "NUMCORES">;   // Number of Cores Register
 
 // GPRs mapped to SPR space
 foreach i = 0-511 in {
-  def GPRReg_SPR#i : SPR<0, !add(1024,i), "GPRReg_SPR"#i>;
+  def GPR_SPRReg#i : SPR<0, !add(1024,i), "GPR_SPR"#i>;
 }
 
 //===----------------------------------------------------------------------===//
@@ -150,20 +148,20 @@ def FFlag : RegisterClass<"OpenRisc", [i1], 32, (add FFlagPReg)>;
 
 // Register class for EPCR registers
 def EPCR : RegisterClass<"OpenRisc", [i32], 32, 
-  (add (sequence "EPCR%u", 0, 15))>;
+  (add (sequence "EPCRReg%u", 0, 15))>;
 
 // Register class for EEAR registers
 def EEAR : RegisterClass<"OpenRisc", [i32], 32, 
-  (add (sequence "EEAR%u", 0, 15))>;
+  (add (sequence "EEARReg%u", 0, 15))>;
 
 // Register class for ESR registers
 def ESR : RegisterClass<"OpenRisc", [i32], 32, 
-  (add (sequence "ESR%u", 0, 15))>;
+  (add (sequence "ESRReg%u", 0, 15))>;
 
 // Register class for ISR registers
 def ISR : RegisterClass<"OpenRisc", [i32], 32, 
-  (add (sequence "ISR%u", 0, 7))>;
+  (add (sequence "ISRReg%u", 0, 7))>;
 
 // Register class for GPRs mapped to SPR space
 def GPR_SPR : RegisterClass<"OpenRisc", [i32], 32, 
-  (add (sequence "GPRReg_SPR%u", 0, 511))>;
+  (add (sequence "GPR_SPRReg%u", 0, 511))>;
