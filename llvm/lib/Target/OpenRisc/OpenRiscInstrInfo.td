@@ -157,16 +157,16 @@ class F9_InstWrapper<bits<11> opcode,
             opcodeAsm#" $ra, $rb", [],
             itin>;
 
-def SFEQ  : F9_InstWrapper<0x720, "l.sfeq", SETEQ>;
-def SFNE  : F9_InstWrapper<0x721, "l.sfne", SETNE>;
-def SFGTU : F9_InstWrapper<0x722, "l.sfgtu", SETUGT>;
-def SFGEU : F9_InstWrapper<0x723, "l.sfgeu", SETUGE>;
-def SFLTU : F9_InstWrapper<0x724, "l.sfltu", SETULT>;
-def SFLEU : F9_InstWrapper<0x725, "l.sfleu", SETULE>;
-def SFGTS : F9_InstWrapper<0x72a, "l.sfgts", SETGT>;
-def SFGES : F9_InstWrapper<0x72b, "l.sfges", SETGE>;
-def SFLTS : F9_InstWrapper<0x72c, "l.sflts", SETLT>;
-def SFLES : F9_InstWrapper<0x72d, "l.sfles", SETLE>;
+def SFEQ  : F9_InstWrapper<0x720, "l.sfeq">;
+def SFNE  : F9_InstWrapper<0x721, "l.sfne">;
+def SFGTU : F9_InstWrapper<0x722, "l.sfgtu">;
+def SFGEU : F9_InstWrapper<0x723, "l.sfgeu">;
+def SFLTU : F9_InstWrapper<0x724, "l.sfltu">;
+def SFLEU : F9_InstWrapper<0x725, "l.sfleu">;
+def SFGTS : F9_InstWrapper<0x72a, "l.sfgts">;
+def SFGES : F9_InstWrapper<0x72b, "l.sfges">;
+def SFLTS : F9_InstWrapper<0x72c, "l.sflts">;
+def SFLES : F9_InstWrapper<0x72d, "l.sfles">;
 
 //===----------------------------------------------------------------------===//
 // Format 10 - "Move Immediate High" instruction
