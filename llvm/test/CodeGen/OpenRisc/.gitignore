@@ -1,0 +1,6 @@
+# Ignore all files
+*
+
+# Whitelist specific iles and directories
+!.gitignore
+!*.ll
