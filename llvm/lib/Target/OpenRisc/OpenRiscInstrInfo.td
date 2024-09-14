@@ -150,11 +150,11 @@ def SH : F8_InstWrapper<0x37, "l.sh", truncstorei16>;
 // Format 9 - Conditional set-flag instructions
 //===----------------------------------------------------------------------===//
 class F9_InstWrapper<bits<11> opcode,
-                     string opcodeAsm, CondCode cc,
+                     string opcodeAsm,
                      InstrItinClass itin = NoItinerary> :
     F9_Inst<opcode,
             (outs SR:$sr), (ins GPR:$ra, GPR:$rb),
-            opcodeAsm#" $ra, $rb", [/*(set SR:$sr, (setcc GPR:$ra, GPR:$rb, cc))*/],
+            opcodeAsm#" $ra, $rb", [],
             itin>;
 
 def SFEQ  : F9_InstWrapper<0x720, "l.sfeq", SETEQ>;
