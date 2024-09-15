@@ -26,6 +26,7 @@
 #include "llvm/MC/MCSubtargetInfo.h"
 #include "llvm/MC/MCSymbol.h"
 #include "llvm/MC/TargetRegistry.h"
+#include "llvm/Support/MathExtras.h"
 #include "llvm/Support/Casting.h"
 
 using namespace llvm;
@@ -91,15 +92,6 @@ public:
   }
 };
 
-// Return true if Expr is in the range [MinValue, MaxValue].
-static bool inRange(const MCExpr *Expr, int64_t MinValue, int64_t MaxValue) {
-  if (auto *CE = dyn_cast<MCConstantExpr>(Expr)) {
-    int64_t Value = CE->getValue();
-    return Value >= MinValue && Value <= MaxValue;
-  }
-  return false;
-}
-
 struct OpenRiscOperand : public MCParsedAsmOperand {
 
   enum KindTy {
@@ -148,16 +140,18 @@ public:
   bool isImm() const override { return Kind == Immediate; }
   bool isMem() const override { return false; }
 
-  bool isImm(int64_t MinValue, int64_t MaxValue) const {
-    return Kind == Immediate && inRange(getImm(), MinValue, MaxValue);
+  bool isSImm16() const { return (Kind == Immediate) && isInt<16>(cast<MCConstantExpr>(getImm())->getValue());}
+  bool isUImm5() const { return (Kind == Immediate) && isUInt<5>(cast<MCConstantExpr>(getImm())->getValue()); }
+  bool isUImm16() const { return (Kind == Immediate) && isUInt<16>(cast<MCConstantExpr>(getImm())->getValue());}
+  bool isImm16() const { 
+    int64_t Imm = (cast<MCConstantExpr>(getImm())->getValue());
+    return (Kind == Immediate) && (isInt<16>(Imm) || isUInt<16>(Imm));
   }
-
-  bool isImm16High() const { return false; }
-  bool isImm16() const { return false; }
-  bool isImm32() const { return false; }
-  bool isSImm16() const { return false; }
-  bool isUImm16() const { return false; }
-  bool isUImm5() const { return false; }
+  bool isImm32() const { 
+    int64_t Imm = (cast<MCConstantExpr>(getImm())->getValue());
+    return (Kind == Immediate) && (isInt<32>(Imm) || isUInt<32>(Imm));
+  }
+  bool isImm16High() const { return (Kind == Immediate) && ((cast<MCConstantExpr>(getImm())->getValue() & 0xFFFF) == 0); }
 
   /// getStartLoc - Gets location of the first token of this operand
   SMLoc getStartLoc() const override { return StartLoc; }
@@ -165,7 +159,7 @@ public:
   SMLoc getEndLoc() const override { return EndLoc; }
 
   MCRegister getReg() const override {
-    assert(Kind == Register && "Invalid type access!");
+    assert((Kind == Register) && "Invalid type access!");
     return Reg.RegNum;
   }
 

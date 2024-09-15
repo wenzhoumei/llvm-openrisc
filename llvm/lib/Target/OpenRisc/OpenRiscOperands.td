@@ -26,23 +26,23 @@ class Immediate<ValueType vt, code pred, string asmOp>
 }
 
 // Immediate operations
-def Imm16High_AsmOperand : ImmAsmOperand<"Imm16High">;
-def imm16hi : Immediate<i32, [{ return (Imm & 0xFFFF) == 0; }], "Imm16High_AsmOperand">;
-
 def SImm16_AsmOperand : ImmAsmOperand<"SImm16">;
 def simm16 : Immediate<i32, [{ return isInt<16>(Imm); }], "SImm16_AsmOperand">;
 
-def Imm32_AsmOperand : ImmAsmOperand<"Imm32">;
-def imm32 : Immediate<i32, [{ return isInt<32>(Imm) || isUInt<32>(Imm); }], "Imm32_AsmOperand">;
-
-def Imm16_AsmOperand : ImmAsmOperand<"Imm16">;
-def imm16 : Immediate<i32, [{ return isInt<16>(Imm) || isUInt<16>(Imm); }], "Imm16_AsmOperand">;
+def UImm5_AsmOperand : ImmAsmOperand<"UImm5">;
+def uimm5 : Immediate<i32, [{ return isUInt<5>(Imm); }], "UImm5_AsmOperand">;
 
 def UImm16_AsmOperand : ImmAsmOperand<"UImm16">;
 def uimm16 : Immediate<i32, [{ return isUInt<16>(Imm); }], "UImm16_AsmOperand">;
 
-def UImm5_AsmOperand : ImmAsmOperand<"UImm5">;
-def uimm5 : Immediate<i32, [{ return isUInt<5>(Imm); }], "UImm5_AsmOperand">;
+def Imm16_AsmOperand : ImmAsmOperand<"Imm16">;
+def imm16 : Immediate<i32, [{ return isInt<16>(Imm) || isUInt<16>(Imm); }], "Imm16_AsmOperand">;
+
+def Imm32_AsmOperand : ImmAsmOperand<"Imm32">;
+def imm32 : Immediate<i32, [{ return isInt<32>(Imm) || isUInt<32>(Imm); }], "Imm32_AsmOperand">;
+
+def Imm16High_AsmOperand : ImmAsmOperand<"Imm16High">;
+def imm16hi : Immediate<i32, [{ return (Imm & 0xFFFF) == 0; }], "Imm16High_AsmOperand">;
 
 //===----------------------------------------------------------------------===//
 // Memory address operands
