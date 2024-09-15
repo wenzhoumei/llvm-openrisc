@@ -8,13 +8,6 @@ This project provides a backend for the OpenRISC architecture, specifically targ
 - No floating-point support (planned for future releases)
 
 ## Setup and Compilation
-
-### Requirements
-
-- LLVM 16.0 or higher
-- CMake 3.13 or higher
-- Ninja (optional but recommended for faster builds)
-
 ### Steps to Compile
 
 1. Clone the LLVM project and this backend:
