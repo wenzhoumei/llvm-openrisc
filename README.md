@@ -1,15 +1,15 @@
 # LLVM OpenRISC Backend
-
-This project provides a backend for the OpenRISC architecture, specifically targeting the ORBIS32 class I instruction set.
+This project provides a backend for the OpenRISC architecture.
 
 ## Features
-
 - ORBIS32 class I instruction set support
-- No floating-point support (planned for future releases)
+
+## TODO
+- Integrated assembler
+- Floating-point support
 
 ## Setup and Compilation
 ### Steps to Compile
-
 1. Clone the LLVM project and this backend:
    ```
    git clone https://github.com/llvm/llvm-project.git
@@ -35,11 +35,11 @@ This project provides a backend for the OpenRISC architecture, specifically targ
 ### Usage
 To compile code using llc for the OpenRISC backend, use the following command:
    ```
-   llc -march=openrisc -filetype=obj -o output.o input.ll
+   llc -march=openrisc -S -O2 <source-file.ll>
    ```
 
 ### Tests
-My tests for this backend are currently located under the following directory (subject to change):
+My tests for this backend are currently located under the following directory:
    ```
    llvm-openrisc/llvm/test/CodeGen/OpenRisc/Personal
    ```
