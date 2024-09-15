@@ -64,10 +64,10 @@ class OpenRiscAsmParser : public MCTargetAsmParser {
 
   ParseStatus parseImmediate(OperandVector &Operands);
   ParseStatus parseRegister(OperandVector &Operands, bool AllowParens = false,
-                            bool FFlag = false);
+                            bool SpecialRegister = false);
   ParseStatus parseOperandWithModifier(OperandVector &Operands);
   bool parseOperand(OperandVector &Operands, StringRef Mnemonic,
-                    bool FFlag = false);
+                    bool SpecialRegister = false);
   bool ParseInstructionWithSR(ParseInstructionInfo &Info, StringRef Name,
                               SMLoc NameLoc, OperandVector &Operands);
   ParseStatus tryParseRegister(MCRegister &Reg, SMLoc &StartLoc,
@@ -309,15 +309,24 @@ bool OpenRiscAsmParser::MatchAndEmitInstruction(SMLoc IDLoc, unsigned &Opcode,
     }
     return Error(ErrorLoc, "invalid operand for instruction");
   }
+  case Match_InvalidSImm16:
+    return Error(RefineErrorLoc(IDLoc, Operands, ErrorInfo),
+                 "expected immediate in range [-32768, 32767]");
   case Match_InvalidUImm5:
     return Error(RefineErrorLoc(IDLoc, Operands, ErrorInfo),
                  "expected immediate in range [0, 31]");
-  case Match_InvalidSImm16:
+  case Match_InvalidUImm16:
     return Error(RefineErrorLoc(IDLoc, Operands, ErrorInfo),
-                 "expected immediate in range [-32768, 32512]");
+                 "expected immediate in range [0, 65535]");
+  case Match_InvalidImm16:
+      return Error(RefineErrorLoc(IDLoc, Operands, ErrorInfo),
+                 "expected 16-bit immediate");
+  case Match_InvalidImm32:
+    return Error(RefineErrorLoc(IDLoc, Operands, ErrorInfo),
+                 "expected 32-bit immediate");
   case Match_InvalidImm16High:
       return Error(RefineErrorLoc(IDLoc, Operands, ErrorInfo),
-                "expected immediate in range [0, 65535] for upper 16 bits");
+                "expected 32-bit immediate, last 16 bits should be zero");
   }
 
   report_fatal_error("Unknown match type detected!");
@@ -361,7 +370,7 @@ bool OpenRiscAsmParser::parseRegister(MCRegister &Reg, SMLoc &StartLoc,
 }
 
 ParseStatus OpenRiscAsmParser::parseRegister(OperandVector &Operands,
-                                           bool AllowParens, bool FFlag) {
+                                           bool AllowParens, bool SpecialRegister) {
   SMLoc FirstS = getLoc();
   bool HadParens = false;
   AsmToken Buf[2];
@@ -371,7 +380,7 @@ ParseStatus OpenRiscAsmParser::parseRegister(OperandVector &Operands,
   if (AllowParens && getLexer().is(AsmToken::LParen)) {
     size_t ReadCount = getLexer().peekTokens(Buf);
     if (ReadCount == 2 && Buf[1].getKind() == AsmToken::RParen) {
-      if ((Buf[0].getKind() == AsmToken::Integer) && (!FFlag))
+      if ((Buf[0].getKind() == AsmToken::Integer) && (!SpecialRegister))
         return ParseStatus::NoMatch;
       HadParens = true;
       getParser().Lex(); // Eat '('
@@ -384,7 +393,7 @@ ParseStatus OpenRiscAsmParser::parseRegister(OperandVector &Operands,
   default:
     return ParseStatus::NoMatch;
   case AsmToken::Integer:
-    if (!FFlag)
+    if (!SpecialRegister)
       return ParseStatus::NoMatch;
     RegName = getLexer().getTok().getString();
     RegNo = MatchRegisterName(RegName);
@@ -462,7 +471,7 @@ ParseStatus OpenRiscAsmParser::parseOperandWithModifier(OperandVector &Operands)
 /// from this information, adding to Operands.
 /// If operand was parsed, returns false, else true.
 bool OpenRiscAsmParser::parseOperand(OperandVector &Operands, StringRef Mnemonic,
-                                   bool FFlag) {
+                                   bool SpecialRegister) {
   // Check if the current operand has a custom associated parser, if so, try to
   // custom parse the operand, or fallback to the general approach.
   ParseStatus Res = MatchOperandParserImpl(Operands, Mnemonic);
@@ -476,7 +485,7 @@ bool OpenRiscAsmParser::parseOperand(OperandVector &Operands, StringRef Mnemonic
     return true;
 
   // Attempt to parse token as register
-  if (parseRegister(Operands, true, FFlag).isSuccess())
+  if (parseRegister(Operands, true, SpecialRegister).isSuccess())
     return false;
 
   // Attempt to parse token as an immediate
@@ -493,7 +502,7 @@ bool OpenRiscAsmParser::ParseInstructionWithSR(ParseInstructionInfo &Info,
   if ((Name.starts_with("wsr.") || Name.starts_with("rsr.") ||
        Name.starts_with("xsr.")) &&
       (Name.size() > 4)) {
-    // Parse case when instruction name is concatenated with FFlag register
+    // Parse case when instruction name is concatenated with SpecialRegister register
     // name, like "wsr.sar a1"
 
     // First operand is token for instruction
