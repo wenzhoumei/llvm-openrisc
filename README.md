@@ -36,7 +36,7 @@ This project provides a backend for the OpenRISC architecture, specifically targ
 
 4. Build the project:
    ```
-   ninja -v -j8 bin//llc
+   ninja -v -j8
    ```
 
 ### Usage
@@ -45,10 +45,10 @@ To compile code using llc for the OpenRISC backend, use the following command:
    llc -march=openrisc -filetype=obj -o output.o input.ll
    ```
 
-### Running Tests
-The tests for this backend are located under the following directory:
+### Tests
+My tests for this backend are currently located under the following directory (subject to change):
    ```
-   llvm-openrisc/llvm/test/CodeGen/OpenRisc
+   llvm-openrisc/llvm/test/CodeGen/OpenRisc/Personal
    ```
 
 # The LLVM Compiler Infrastructure
