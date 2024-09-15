@@ -2,13 +2,10 @@
 
 This project provides a backend for the OpenRISC architecture, specifically targeting the ORBIS32 class 1 instruction set.
 
-The current implementation supports only integer operations, with plans to add floating-point support in the future.
-
 ## Features
 
 - ORBIS32 class 1 instruction set support
 - No floating-point support (planned for future releases)
-- Custom backend implementation for OpenRISC in LLVM
 
 ## Setup and Compilation
 
