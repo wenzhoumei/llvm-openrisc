@@ -68,7 +68,7 @@ class OpenRiscAsmParser : public MCTargetAsmParser {
   ParseStatus parseOperandWithModifier(OperandVector &Operands);
   bool parseOperand(OperandVector &Operands, StringRef Mnemonic,
                     bool SpecialRegister = false);
-  bool ParseInstructionWithSR(ParseInstructionInfo &Info, StringRef Name,
+  bool ParseInstructionWithSpecialRegister(ParseInstructionInfo &Info, StringRef Name,
                               SMLoc NameLoc, OperandVector &Operands);
   ParseStatus tryParseRegister(MCRegister &Reg, SMLoc &StartLoc,
                                SMLoc &EndLoc) override {
@@ -496,7 +496,7 @@ bool OpenRiscAsmParser::parseOperand(OperandVector &Operands, StringRef Mnemonic
   return Error(getLoc(), "unknown operand");
 }
 
-bool OpenRiscAsmParser::ParseInstructionWithSR(ParseInstructionInfo &Info,
+bool OpenRiscAsmParser::ParseInstructionWithSpecialRegister(ParseInstructionInfo &Info,
                                              StringRef Name, SMLoc NameLoc,
                                              OperandVector &Operands) {
   if ((Name.starts_with("wsr.") || Name.starts_with("rsr.") ||
@@ -558,7 +558,7 @@ bool OpenRiscAsmParser::ParseInstruction(ParseInstructionInfo &Info,
                                        OperandVector &Operands) {
   if (Name.starts_with("wsr") || Name.starts_with("rsr") ||
       Name.starts_with("xsr")) {
-    return ParseInstructionWithSR(Info, Name, NameLoc, Operands);
+    return ParseInstructionWithSpecialRegister(Info, Name, NameLoc, Operands);
   }
 
   // First operand is token for instruction
