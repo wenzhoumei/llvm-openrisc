@@ -21,38 +21,38 @@ The current implementation supports only integer operations, with plans to add f
 ### Steps to Compile
 
 1. Clone the LLVM project and this backend:
-   \```
+   ```
    git clone https://github.com/llvm/llvm-project.git
    cd llvm-project
-   \```
+   ```
 
 2. Create a build directory:
-   \```
+   ```
    mkdir build
    cd build
-   \```
+   ```
 
 3. Configure the build:
-   \```
+   ```
    cmake -G Ninja -DLLVM_ENABLE_PROJECTS="clang;llvm" -DLLVM_TARGETS_TO_BUILD="OpenRisc" -DCMAKE_BUILD_TYPE=Debug -DLLVM_USE_LINKER=lld ../llvm
-   \```
+   ```
 
 4. Build the project:
-   \```
+   ```
    ninja -v -j8 bin//llc
-   \```
+   ```
 
 ### Usage
 To compile code using llc for the OpenRISC backend, use the following command:
-   \```
+   ```
    llc -march=openrisc -filetype=obj -o output.o input.ll
-   \```
+   ```
 
 ### Running Tests
 The tests for this backend are located under the following directory:
-   \```
+   ```
    llvm-openrisc/llvm/test/CodeGen/OpenRisc
-   \```
+   ```
 
 # The LLVM Compiler Infrastructure
 
