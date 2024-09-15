@@ -152,106 +152,12 @@ public:
     return Kind == Immediate && inRange(getImm(), MinValue, MaxValue);
   }
 
-  bool isImm8() const { return isImm(-128, 127); }
-
-  bool isImm8_sh8() const {
-    return isImm(-32768, 32512) &&
-           ((cast<MCConstantExpr>(getImm())->getValue() & 0xFF) == 0);
-  }
-
-  bool isImm12() const { return isImm(-2048, 2047); }
-
-  // Convert MOVI to literal load, when immediate is not in range (-2048, 2047)
-  bool isImm12m() const { return Kind == Immediate; }
-
-  bool isOffset4m32() const {
-    return isImm(0, 60) &&
-           ((cast<MCConstantExpr>(getImm())->getValue() & 0x3) == 0);
-  }
-
-  bool isOffset8m8() const { return isImm(0, 255); }
-
-  bool isOffset8m16() const {
-    return isImm(0, 510) &&
-           ((cast<MCConstantExpr>(getImm())->getValue() & 0x1) == 0);
-  }
-
-  bool isOffset8m32() const {
-    return isImm(0, 1020) &&
-           ((cast<MCConstantExpr>(getImm())->getValue() & 0x3) == 0);
-  }
-
-  bool isUimm4() const { return isImm(0, 15); }
-
-  bool isUimm5() const { return isImm(0, 31); }
-
-  bool isImm8n_7() const { return isImm(-8, 7); }
-
-  bool isShimm1_31() const { return isImm(1, 31); }
-
-  bool isImm16_31() const { return isImm(16, 31); }
-
-  bool isImm1_16() const { return isImm(1, 16); }
-
-  bool isB4const() const {
-    if (Kind != Immediate)
-      return false;
-    if (auto *CE = dyn_cast<MCConstantExpr>(getImm())) {
-      int64_t Value = CE->getValue();
-      switch (Value) {
-      case -1:
-      case 1:
-      case 2:
-      case 3:
-      case 4:
-      case 5:
-      case 6:
-      case 7:
-      case 8:
-      case 10:
-      case 12:
-      case 16:
-      case 32:
-      case 64:
-      case 128:
-      case 256:
-        return true;
-      default:
-        return false;
-      }
-    }
-    return false;
-  }
-
-  bool isB4constu() const {
-    if (Kind != Immediate)
-      return false;
-    if (auto *CE = dyn_cast<MCConstantExpr>(getImm())) {
-      int64_t Value = CE->getValue();
-      switch (Value) {
-      case 32768:
-      case 65536:
-      case 2:
-      case 3:
-      case 4:
-      case 5:
-      case 6:
-      case 7:
-      case 8:
-      case 10:
-      case 12:
-      case 16:
-      case 32:
-      case 64:
-      case 128:
-      case 256:
-        return true;
-      default:
-        return false;
-      }
-    }
-    return false;
-  }
+  bool isImm16High() const { return false; }
+  bool isImm16() const { return false; }
+  bool isImm32() const { return false; }
+  bool isSImm16() const { return false; }
+  bool isUImm16() const { return false; }
+  bool isUImm5() const { return false; }
 
   /// getStartLoc - Gets location of the first token of this operand
   SMLoc getStartLoc() const override { return StartLoc; }
@@ -415,7 +321,7 @@ bool OpenRiscAsmParser::MatchAndEmitInstruction(SMLoc IDLoc, unsigned &Opcode,
   case Match_InvalidSImm16:
     return Error(RefineErrorLoc(IDLoc, Operands, ErrorInfo),
                  "expected immediate in range [-32768, 32512]");
-  case Match_InvalidUImm16High:
+  case Match_InvalidImm16High:
       return Error(RefineErrorLoc(IDLoc, Operands, ErrorInfo),
                 "expected immediate in range [0, 65535] for upper 16 bits");
   }

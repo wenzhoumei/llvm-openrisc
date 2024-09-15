@@ -175,6 +175,8 @@ StringRef Triple::getArchTypePrefix(ArchType Kind) {
   case mips64:
   case mips64el:    return "mips";
 
+  case openrisc:    return "openrisc";
+
   case hexagon:     return "hexagon";
 
   case amdgcn:      return "amdgcn";
@@ -404,6 +406,7 @@ Triple::ArchType Triple::getArchTypeForLLVMName(StringRef Name) {
     .Case("mips64", mips64)
     .Case("mips64el", mips64el)
     .Case("msp430", msp430)
+    .Case("openrisc", openrisc)
     .Case("ppc64", ppc64)
     .Case("ppc32", ppc)
     .Case("ppc", ppc)
@@ -556,6 +559,7 @@ static Triple::ArchType parseArch(StringRef ArchName) {
                  "mipsn32r6", Triple::mips64)
           .Cases("mips64el", "mipsn32el", "mipsisa64r6el", "mips64r6el",
                  "mipsn32r6el", Triple::mips64el)
+          .Case("openrisc", Triple::openrisc)
           .Case("r600", Triple::r600)
           .Case("amdgcn", Triple::amdgcn)
           .Case("riscv32", Triple::riscv32)
@@ -1844,6 +1848,7 @@ Triple Triple::getBigEndianArchVariant() const {
   case Triple::msp430:
   case Triple::nvptx64:
   case Triple::nvptx:
+  case Triple::openrisc:
   case Triple::r600:
   case Triple::renderscript32:
   case Triple::renderscript64:
@@ -1949,6 +1954,7 @@ bool Triple::isLittleEndian() const {
   case Triple::msp430:
   case Triple::nvptx64:
   case Triple::nvptx:
+  case Triple::openrisc:
   case Triple::ppcle:
   case Triple::ppc64le:
   case Triple::r600:

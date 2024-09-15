@@ -34,7 +34,7 @@ The current implementation supports only integer operations, with plans to add f
 
 3. Configure the build:
    \```
-   cmake -G Ninja -DLLVM_ENABLE_PROJECTS="clang" -DLLVM_TARGETS_TO_BUILD="OpenRisc" ../llvm
+   cmake -G Ninja -DLLVM_ENABLE_PROJECTS="clang;llvm" -DLLVM_TARGETS_TO_BUILD="OpenRisc" -DCMAKE_BUILD_TYPE=Debug -DLLVM_USE_LINKER=lld ../llvm
    \```
 
 4. Build the project:

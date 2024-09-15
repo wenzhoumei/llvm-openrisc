@@ -78,6 +78,10 @@ private:
   uint32_t getLoSymbolEncoding(const MCInst &MI, unsigned OpNo,
                              SmallVectorImpl<MCFixup> &Fixups,
                              const MCSubtargetInfo &STI) const;
+  
+  uint32_t getPlaceholderOpValue(const MCInst &MI, unsigned OpNo,
+                              SmallVectorImpl<MCFixup> &Fixups,
+                              const MCSubtargetInfo &STI) const;
 };
 } // namespace
 
@@ -193,5 +197,11 @@ OpenRiscMCCodeEmitter::getLoSymbolEncoding(const MCInst &MI, unsigned int OpNum,
   return 0;
 }
 
+uint32_t
+OpenRiscMCCodeEmitter::getPlaceholderOpValue(const MCInst &MI, unsigned OpNo,
+                                         SmallVectorImpl<MCFixup> &Fixups,
+                                         const MCSubtargetInfo &STI) const {
+  return 0;
+}
 
 #include "OpenRiscGenMCCodeEmitter.inc"

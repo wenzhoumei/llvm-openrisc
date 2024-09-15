@@ -18,8 +18,11 @@ class ImmAsmOperand<string name> : AsmOperandClass {
 /// https://vscode.dev/github/wenzhoumei/llvm-openrisc/blob/main/llvm/lib/Target/Xtensa/XtensaOperands.td#L18
 class Immediate<ValueType vt, code pred, string asmOp>
   : Operand<vt>, ImmLeaf<vt, pred> {
-    let PrintMethod = "print"#asmOp;
-    let ParserMatchClass = !cast<AsmOperandClass>(asmOp);
+  let PrintMethod = "print"#asmOp;
+  let ParserMatchClass = !cast<AsmOperandClass>(asmOp);
+
+  let EncoderMethod = "getPlaceholderOpValue";
+  let DecoderMethod = "decodePlaceholder";
 }
 
 // Immediate operations
@@ -58,30 +61,37 @@ def addrimm : ComplexPattern<iPTR, 2, "selectAddrRegImm">;
 //===----------------------------------------------------------------------===//
 // Symbolic address operands
 //===----------------------------------------------------------------------===//
+def OpenRiscPCRelTargetAsmOperand : AsmOperandClass {
+  let Name = "PCRelTarget";
+  let ParserMethod = "parsePCRelTarget";
+  let PredicateMethod = "isImm";
+  let RenderMethod = "addImmOperands";
+}
+
 def brtarget : Operand<OtherVT> {
   let PrintMethod = "printBranchTarget";
   let EncoderMethod = "getBranchTargetEncoding";
   let DecoderMethod = "decodeBranchOperand";
-  //let ParserMatchClass = XtensaPCRelTargetAsmOperand; TODO
+  let ParserMatchClass = OpenRiscPCRelTargetAsmOperand;
 }
 
 def calltarget : Operand<iPTR> {
   let PrintMethod = "printCallOperand";
   let EncoderMethod = "getCallEncoding";
   let DecoderMethod = "decodeCallOperand";
-  //let ParserMatchClass = XtensaPCRelTargetAsmOperand;
+  let ParserMatchClass = OpenRiscPCRelTargetAsmOperand;
 }
 
 def hisymtarget : Operand<iPTR> {
   let PrintMethod = "printHiSymbolOperand";
   let EncoderMethod = "getHiSymbolEncoding";
   let DecoderMethod = "decodeHiSymbolOperand";
-  //let ParserMatchClass = XtensaPCRelTargetAsmOperand;
+  let ParserMatchClass = OpenRiscPCRelTargetAsmOperand;
 }
 
 def losymtarget : Operand<iPTR> {
   let PrintMethod = "printLoSymbolOperand";
   let EncoderMethod = "getLoSymbolEncoding";
   let DecoderMethod = "decodeLoSymbolOperand";
-  //let ParserMatchClass = XtensaPCRelTargetAsmOperand;
+  let ParserMatchClass = OpenRiscPCRelTargetAsmOperand;
 }

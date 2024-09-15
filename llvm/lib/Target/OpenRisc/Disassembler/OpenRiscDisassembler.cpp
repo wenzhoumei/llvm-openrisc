@@ -67,40 +67,18 @@ static const unsigned GPRDecoderTable[] = {
 static DecodeStatus DecodeGPRRegisterClass(MCInst &Inst, uint64_t RegNo,
                                           uint64_t Address,
                                           const void *Decoder) {
-  if (RegNo >= std::size(GPRDecoderTable))
-    return MCDisassembler::Fail;
-
-  unsigned Reg = GPRDecoderTable[RegNo];
-  Inst.addOperand(MCOperand::createReg(Reg));
-  return MCDisassembler::Success;
+  return MCDisassembler::Fail;
 }
 static DecodeStatus decodeMemRegOperand(MCInst &Inst, uint64_t Imm,
                                        int64_t Address, const void *Decoder) {
-  assert(isUInt<12>(Imm) && "Invalid immediate");
-  DecodeGPRRegisterClass(Inst, Imm & 0xf, Address, Decoder);
-  Inst.addOperand(MCOperand::createImm((Imm >> 2) & 0x3fc));
-  return MCDisassembler::Success;
+  return MCDisassembler::Fail;
 }
 
-/// Read three bytes from the ArrayRef and return 24 bit data
-static DecodeStatus readInstruction24(ArrayRef<uint8_t> Bytes, uint64_t Address,
-                                      uint64_t &Size, uint32_t &Insn,
-                                      bool IsLittleEndian) {
-  // We want to read exactly 3 Bytes of data.
-  if (Bytes.size() < 3) {
-    Size = 0;
-    return MCDisassembler::Fail;
-  }
-
-  if (!IsLittleEndian) {
-    report_fatal_error("Big-endian mode currently is not supported!");
-  } else {
-    Insn = (Bytes[2] << 16) | (Bytes[1] << 8) | (Bytes[0] << 0);
-  }
-
-  Size = 3;
-  return MCDisassembler::Success;
+static DecodeStatus decodePlaceholder(MCInst &Inst, uint64_t Imm,
+                                      int64_t Address, const void *Decoder) {
+  return MCDisassembler::Fail;
 }
+
 
 #include "OpenRiscGenDisassemblerTables.inc"
 
@@ -108,13 +86,5 @@ DecodeStatus OpenRiscDisassembler::getInstruction(MCInst &MI, uint64_t &Size,
                                                 ArrayRef<uint8_t> Bytes,
                                                 uint64_t Address,
                                                 raw_ostream &CS) const {
-  uint32_t Insn;
-  DecodeStatus Result;
-
-  Result = readInstruction24(Bytes, Address, Size, Insn, IsLittleEndian);
-  if (Result == MCDisassembler::Fail)
-    return MCDisassembler::Fail;
-  LLVM_DEBUG(dbgs() << "Trying OpenRisc 24-bit instruction table :\n");
-  Result = decodeInstruction(DecoderTable24, MI, Insn, Address, this, STI);
-  return Result;
+  return MCDisassembler::Fail;
 }
