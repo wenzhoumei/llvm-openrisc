@@ -7,6 +7,7 @@ This project provides a backend for the OpenRISC architecture.
 ## TODO
 - Integrated assembler
 - Floating-point support
+- GCC interoperability
 
 ## Setup and Compilation
 ### Steps to Compile
