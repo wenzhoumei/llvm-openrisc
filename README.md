@@ -1,6 +1,6 @@
 # LLVM OpenRISC Backend
 
-This project provides a backend for the OpenRISC architecture, specifically targeting the ORBIS32 class 1 instruction set.
+This project provides a backend for the OpenRISC architecture, specifically targeting the ORBIS32 class I instruction set.
 
 ## Features
 
