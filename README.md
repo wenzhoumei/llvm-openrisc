@@ -4,7 +4,7 @@ This project provides a backend for the OpenRISC architecture, specifically targ
 
 ## Features
 
-- ORBIS32 class 1 instruction set support
+- ORBIS32 class I instruction set support
 - No floating-point support (planned for future releases)
 
 ## Setup and Compilation
