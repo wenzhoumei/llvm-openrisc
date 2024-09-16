@@ -95,6 +95,7 @@ def JR   : F5_InstWrapper<0x11, "l.jr", [(brind GPR:$rb)]>;
 let isReturn = 1 in
 def JALR : F5_InstWrapper<0x12, "l.jalr", [(OpenRisc_call GPR:$rb)]>;
 }
+
 //===----------------------------------------------------------------------===//
 // Format 6  - Jumps and branch instructions with immediate
 //===----------------------------------------------------------------------===//
@@ -112,7 +113,6 @@ def JAL : F6_InstWrapper<0x1, "l.jal", [], (ins calltarget:$imm)>;
 def BNF : F6_InstWrapper<0x3, "l.bnf", [], (ins FFlag:$ff, brtarget:$imm)>;
 def BF  : F6_InstWrapper<0x4, "l.bf", [], (ins FFlag:$ff, brtarget:$imm)>;
 }
-
 
 //===----------------------------------------------------------------------===//
 // Format 7 - Load instructions
