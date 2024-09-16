@@ -25,7 +25,7 @@ This project provides a backend for the OpenRISC architecture.
 
 3. Configure the build:
    ```
-   cmake -G Ninja -DLLVM_ENABLE_PROJECTS="clang;llvm" -DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD="OpenRisc" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_LINKER=<path-to-linker> ../llvm
+   cmake -G Ninja -DLLVM_ENABLE_PROJECTS="clang;llvm" -DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD="OpenRisc" -DCMAKE_BUILD_TYPE=Debug -DLLVM_USE_LINKER=<linker> ../llvm
    ```
 
 4. Build the project:
