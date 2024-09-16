@@ -34,9 +34,13 @@ This project provides a backend for the OpenRISC architecture.
    ```
 
 ### Usage
-To compile code using llc for the OpenRISC backend, use the following command:
+To compile LLVM IR code using **llc** targeting the OpenRISC backend, use the following command:
    ```
-   llc -march=openrisc -S -O2 <source-file.ll>
+   <path-to-build-directory>/bin/llc -march=openrisc <input.ll>
+   ```
+To compile C code using **clang**, use the following command:
+   ```
+   <path-to-build-directory>/bin/clang <input.c> -O2 --target=openrisc -S
    ```
 
 ### Tests
