@@ -3,8 +3,8 @@
 @global_var = global i32 3
 
 define i32 @return_global() {
-; CHECK: hi(global_var)
-; CHECK: lo(global_var)
+; CHECK: l.movhi r3, hi(global_var)
+; CHECK: l.ori r3, r3, lo(global_var)
   %val = load i32, i32* @global_var
-  ret i32 %val
+  ret i32 @global_var
 }
