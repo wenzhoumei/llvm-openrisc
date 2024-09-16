@@ -120,90 +120,90 @@ void OpenRiscInstPrinter::printCallOperand(const MCInst *MI, int OpNum,
     llvm_unreachable("Invalid operand");
 }
 
-void OpenRiscInstPrinter::printHiSymbolOperand(const MCInst *MI, int OpNum,
-                                                   raw_ostream &O) {
-  const MCOperand &MC = MI->getOperand(OpNum);
-  if (MC.isExpr()) {
-    O << "hi(";
-    MC.getExpr()->print(O, &MAI, true);
-    O << ")";
-  } else {
-    printOperand(MI, OpNum, O);
-  }
-}
-
-void OpenRiscInstPrinter::printLoSymbolOperand(const MCInst *MI, int OpNum,
-                                                   raw_ostream &O) {
-  const MCOperand &MC = MI->getOperand(OpNum);
-  if (MC.isExpr()) {
-    O << "lo(";
-    MC.getExpr()->print(O, &MAI, true);
-    O << ")";
-  } else {
-    printOperand(MI, OpNum, O);
-  }
-}
-
 void OpenRiscInstPrinter::printImm16High_AsmOperand(const MCInst *MI, int OpNum,
                                                    raw_ostream &O) {
   const MCOperand &MC = MI->getOperand(OpNum);
+
   if (MC.isImm()) {
-    // Get the 32-bit immediate value
     int64_t Value = MC.getImm();
-
     assert(((Value & 0xFFFF) == 0) && "Lower 16-bit not zero");
-
     O << "hi(" << Value << ")";
+  } else if (MC.isExpr()) {
+    O << "hi(";
+    MC.getExpr()->print(O, &MAI, true);
+    O << ")";
   } else
     printOperand(MI, OpNum, O);
 }
 
 void OpenRiscInstPrinter::printSImm16_AsmOperand(const MCInst *MI, int OpNum,
                                               raw_ostream &O) {
-  if (MI->getOperand(OpNum).isImm()) {
-    int64_t Value = MI->getOperand(OpNum).getImm();
+  const MCOperand &MC = MI->getOperand(OpNum);
+
+  if (MC.isImm()) {
+    int64_t Value = MC.getImm();
     assert((Value >= -32768 && Value <= 32767) && "Invalid argument");
     O << Value;
+  } else if (MC.isExpr()) {
+    O << "hi(";
+    MC.getExpr()->print(O, &MAI, true);
+    O << ")";
   } else
     printOperand(MI, OpNum, O);
 }
 
 void OpenRiscInstPrinter::printImm32_AsmOperand(const MCInst *MI, int OpNum,
                                               raw_ostream &O) {
-  if (MI->getOperand(OpNum).isImm()) {
-    int64_t Value = MI->getOperand(OpNum).getImm();
-    assert((Value >= -2147483648 && Value <= 4294967295) && "Invalid argument");
+  const MCOperand &MC = MI->getOperand(OpNum);
 
+  if (MC.isImm()) {
+    int64_t Value = MC.getImm();
+    assert((Value >= -2147483648 && Value <= 4294967295) && "Invalid argument");
     O << Value;
+  } else if (MC.isExpr()) {
+    MC.getExpr()->print(O, &MAI, true);
   } else
     printOperand(MI, OpNum, O);
 }
 
 void OpenRiscInstPrinter::printImm16_AsmOperand(const MCInst *MI, int OpNum,
                                               raw_ostream &O) {
-  if (MI->getOperand(OpNum).isImm()) {
-    int64_t Value = MI->getOperand(OpNum).getImm();
-    assert((Value >= -32768 && Value <= 65535) && "Invalid argument");
+  const MCOperand &MC = MI->getOperand(OpNum);
 
+  if (MC.isImm()) {
+    int64_t Value = MC.getImm();
+    assert((Value >= -32768 && Value <= 65535) && "Invalid argument");
     O << Value;
+  } else if (MC.isExpr()) {
+    O << "lo(";
+    MC.getExpr()->print(O, &MAI, true);
+    O << ")";
   } else
     printOperand(MI, OpNum, O);
 }
 
 void OpenRiscInstPrinter::printUImm16_AsmOperand(const MCInst *MI, int OpNum,
                                               raw_ostream &O) {
-  if (MI->getOperand(OpNum).isImm()) {
-    int64_t Value = MI->getOperand(OpNum).getImm();
+  const MCOperand &MC = MI->getOperand(OpNum);
+
+  if (MC.isImm()) {
+    int64_t Value = MC.getImm();
     assert((Value >= 0 && Value <= 65535) && "Invalid argument");
     O << Value;
+  } else if (MC.isExpr()) {
+    O << "lo(";
+    MC.getExpr()->print(O, &MAI, true);
+    O << ")";
   } else
     printOperand(MI, OpNum, O);
 }
 
 void OpenRiscInstPrinter::printUImm5_AsmOperand(const MCInst *MI, int OpNum,
                                               raw_ostream &O) {
-  if (MI->getOperand(OpNum).isImm()) {
-    int64_t Value = MI->getOperand(OpNum).getImm();
+  const MCOperand &MC = MI->getOperand(OpNum);
+
+  if (MC.isImm()) {
+    int64_t Value = MC.getImm();
     assert((Value >= 0 && Value <= 31) && "Invalid argument");
     O << Value;
   } else

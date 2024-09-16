@@ -55,9 +55,6 @@ private:
 
   void printImm32_AsmOperand(const MCInst *MI, int OpNum, raw_ostream &O);
   void printImm16_AsmOperand(const MCInst *MI, int OpNum, raw_ostream &O);
-
-  void printHiSymbolOperand(const MCInst *MI, int OpNum, raw_ostream &O);
-  void printLoSymbolOperand(const MCInst *MI, int OpNum, raw_ostream &O);
 };
 } // end namespace llvm
 

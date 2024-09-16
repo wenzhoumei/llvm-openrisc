@@ -29,21 +29,21 @@ def SDT_OpenRiscSelectCC            : SDTypeProfile<1, 5,
 // Node definitions
 //===----------------------------------------------------------------------===//
 def OpenRisc_call: SDNode<"OpenRiscISD::CALL", SDT_OpenRiscCall,
-                       [SDNPHasChain, SDNPOutGlue, SDNPOptInGlue, SDNPVariadic]>;
+                          [SDNPHasChain, SDNPOutGlue, SDNPOptInGlue, SDNPVariadic]>;
 
 def OpenRisc_ret: SDNode<"OpenRiscISD::RET", SDTNone,
-                       [SDNPHasChain, SDNPOptInGlue, SDNPVariadic]>;
+                         [SDNPHasChain, SDNPOptInGlue, SDNPVariadic]>;
 
 def OpenRisc_pcrel_wrapper: SDNode<"OpenRiscISD::PCREL_WRAPPER", SDT_OpenRiscWrapPtr, []>;
 
 def OpenRisc_callseq_start: SDNode<"ISD::CALLSEQ_START", SDT_OpenRiscCallSeqStart,
-                                [SDNPHasChain, SDNPSideEffect, SDNPOutGlue]>;
+                                   [SDNPHasChain, SDNPSideEffect, SDNPOutGlue]>;
 
 def OpenRisc_callseq_end  : SDNode<"ISD::CALLSEQ_END",   SDT_OpenRiscCallSeqEnd,
-                                [SDNPHasChain, SDNPSideEffect, SDNPOptInGlue,
-                                 SDNPOutGlue]>;
+                                   [SDNPHasChain, SDNPSideEffect, SDNPOptInGlue,
+                                   SDNPOutGlue]>;
 
 def OpenRisc_select_cc: SDNode<"OpenRiscISD::SELECT_CC", SDT_OpenRiscSelectCC,
-                            [SDNPInGlue]>;
+                               [SDNPInGlue]>;
 
 def OpenRisc_ga_wrapper : SDNode<"OpenRiscISD::GA_WRAPPER", SDT_OpenRiscWrapPtr>;

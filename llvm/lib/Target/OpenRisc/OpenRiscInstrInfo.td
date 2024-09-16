@@ -90,8 +90,9 @@ class F5_InstWrapper<bits<6> opcode,
             (outs), (ins GPR:$rb),
             opcodeAsm#" $rb", pattern,
             itin>;
-let isBranch = 1, isTerminator = 1 in {
+let isBranch = 1, isTerminator = 1 , isIndirectBranch = 1 in {
 def JR   : F5_InstWrapper<0x11, "l.jr", [(brind GPR:$rb)]>;
+let isReturn = 1 in
 def JALR : F5_InstWrapper<0x12, "l.jalr", [(OpenRisc_call GPR:$rb)]>;
 }
 //===----------------------------------------------------------------------===//
@@ -244,9 +245,6 @@ def RET : F5_Inst<0x11, (outs), (ins),
 }
 }
 
-//def: Pat<(brcond (seteq FFlag:$sr, 0), bb:$imm), (BNF FFlag:$sr, bb:$imm)>;
-//def: Pat<(brcond (seteq FFlag:$sr, 1), bb:$imm), (BF FFlag:$sr, bb:$imm)>;
-
 def : Pat<(OpenRisc_call tglobaladdr:$imm), (JAL $imm)>;
 def : Pat<(OpenRisc_call texternalsym:$imm), (JAL $imm)>;
 
@@ -278,16 +276,9 @@ def imm16_lo_XFORM : SDNodeXForm<imm, [{
 //===----------------------------------------------------------------------===//
 // Other move patterns
 //===----------------------------------------------------------------------===//
-def MOVLO_SYM : F2_Inst<0x2a, 
-                        (outs GPR:$rd), (ins GPR:$ra, losymtarget:$imm),
-                        "ori $rd, $ra, $imm", []>;
-def MOVHI_SYM : F10_Inst<0x6, 0x0,
-                        (outs GPR:$rd), (ins hisymtarget:$imm),
-                         "l.movhi $rd, $imm", []>;
-
 // Symbol moves
-def : Pat<(OpenRisc_ga_wrapper tglobaladdr:$addr), (MOVLO_SYM (MOVHI_SYM (tglobaladdr:$addr)), (tglobaladdr:$addr))>;
-def : Pat<(OpenRisc_ga_wrapper texternalsym:$addr), (MOVLO_SYM (MOVHI_SYM (texternalsym:$addr)), (texternalsym:$addr))>;
+def : Pat<(OpenRisc_ga_wrapper tglobaladdr:$addr), (ORI (MOVHI (tglobaladdr:$addr)), (tglobaladdr:$addr))>;
+def : Pat<(OpenRisc_ga_wrapper texternalsym:$addr), (ORI (MOVHI (texternalsym:$addr)), (texternalsym:$addr))>;
 
 // 16 bit immediate moves
 def : Pat<(imm16:$imm), (ORI R0, imm16:$imm)>;
