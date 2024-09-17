@@ -92,7 +92,6 @@ class F5_InstWrapper<bits<6> opcode,
             itin>;
 let isBranch = 1, isTerminator = 1 , isIndirectBranch = 1 in {
 def JR   : F5_InstWrapper<0x11, "l.jr", [(brind GPR:$rb)]>;
-let isReturn = 1 in
 def JALR : F5_InstWrapper<0x12, "l.jalr", [(OpenRisc_call GPR:$rb)]>;
 }
 
@@ -125,12 +124,15 @@ class F7_InstWrapper<bits<6> opcode,
             opcodeAsm#" $rd, ${imm}(${ra})", [(set GPR:$rd, (opNode (addrimm GPR:$ra, simm16:$imm)))], // https://vscode.dev/github/wenzhoumei/llvm-openrisc/blob/main/llvm/lib/Target/RISCV/RISCVInstrInfo.td#L1708
             itin>;
 
+let mayLoad = 1 in {
 def LWZ   : F7_InstWrapper<0x21, "l.lwz", load>;
 def LWS   : F7_InstWrapper<0x22, "l.lws", load>;
 def LBZ   : F7_InstWrapper<0x23, "l.lbz", zextloadi8>;
 def LBS   : F7_InstWrapper<0x24, "l.lbs", sextloadi8>;
 def LHZ   : F7_InstWrapper<0x25, "l.lhz", sextloadi16>;
 def LHS   : F7_InstWrapper<0x26, "l.lhs", sextloadi16>;
+}
+
 
 //===----------------------------------------------------------------------===//
 // Format 8 - Store instructions
@@ -238,12 +240,17 @@ def SYS : F14_InstWrapper<0x2000, "l.sys", []>;
 //===----------------------------------------------------------------------===//
 // Calls
 //===----------------------------------------------------------------------===//
+/*
 let isReturn = 1, isTerminator = 1, isBarrier = 1, Uses = [R9] in {
 def RET : F5_Inst<0x11, (outs), (ins),
                 "l.jr lr", [(OpenRisc_ret)]> {
         let rb = 0x9;
 }
 }
+*/
+
+def : Pat<(OpenRisc_ret), (JR 9)>;
+
 
 def : Pat<(OpenRisc_call tglobaladdr:$imm), (JAL $imm)>;
 def : Pat<(OpenRisc_call texternalsym:$imm), (JAL $imm)>;
