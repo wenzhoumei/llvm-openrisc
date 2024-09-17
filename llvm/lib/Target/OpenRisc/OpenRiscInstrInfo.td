@@ -240,16 +240,7 @@ def SYS : F14_InstWrapper<0x2000, "l.sys", []>;
 //===----------------------------------------------------------------------===//
 // Calls
 //===----------------------------------------------------------------------===//
-/*
-let isReturn = 1, isTerminator = 1, isBarrier = 1, Uses = [R9] in {
-def RET : F5_Inst<0x11, (outs), (ins),
-                "l.jr lr", [(OpenRisc_ret)]> {
-        let rb = 0x9;
-}
-}
-*/
-
-def : Pat<(OpenRisc_ret), (JR 9)>;
+def : Pat<(OpenRisc_ret), (JR R9)>;
 
 
 def : Pat<(OpenRisc_call tglobaladdr:$imm), (JAL $imm)>;
