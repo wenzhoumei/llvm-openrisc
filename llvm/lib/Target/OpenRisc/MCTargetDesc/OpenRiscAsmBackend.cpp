@@ -26,12 +26,12 @@ namespace llvm {
 class MCObjectTargetWriter;
 class OpenRiscMCAsmBackend : public MCAsmBackend {
   uint8_t OSABI;
-  bool IsLittleEndian;
+  bool isBigEndian;
 
 public:
   OpenRiscMCAsmBackend(uint8_t osABI, bool isLE)
       : MCAsmBackend(llvm::endianness::little), OSABI(osABI),
-        IsLittleEndian(isLE) {}
+        isBigEndian(isLE) {}
 
   unsigned getNumFixupKinds() const override {
     return OpenRisc::NumTargetFixupKinds;
@@ -49,7 +49,7 @@ public:
                     const MCSubtargetInfo *STI) const override;
 
   std::unique_ptr<MCObjectTargetWriter> createObjectTargetWriter() const override {
-    return createOpenRiscObjectWriter(OSABI, IsLittleEndian);
+    return createOpenRiscObjectWriter(OSABI, isBigEndian);
   }
 };
 } // namespace llvm
@@ -174,33 +174,29 @@ void OpenRiscMCAsmBackend::relaxInstruction(MCInst &Inst,
 
 bool OpenRiscMCAsmBackend::writeNopData(raw_ostream &OS, uint64_t Count,
                                       const MCSubtargetInfo *STI) const {
-  uint64_t NumNops24b = Count / 3;
+  uint64_t NumNops = Count / 4;
 
-  for (uint64_t i = 0; i != NumNops24b; ++i) {
-    // Currently just little-endian machine supported,
+  for (uint64_t i = 0; i != NumNops; ++i) {
+    // Currently just big-endian machine supported,
     // but probably big-endian will be also implemented in future
-    if (IsLittleEndian) {
-      OS.write("\xf0", 1);
-      OS.write("\x20", 1);
-      OS.write("\0x00", 1);
+    if (isBigEndian) {
+      OS.write("\x15", 1);
+      OS.write("\x00", 1);
+      OS.write("\x00", 1);
+      OS.write("\x00", 1);
     } else {
-      report_fatal_error("Big-endian mode currently is not supported!");
+      report_fatal_error("Little-endian mode currently is not supported!");
     }
-    Count -= 3;
+    Count -= 4;
   }
 
-  // TODO maybe function should return error if (Count > 0)
   switch (Count) {
   default:
     break;
   case 1:
-    OS.write("\0", 1);
-    break;
   case 2:
-    // NOP.N instruction
-    OS.write("\x3d", 1);
-    OS.write("\xf0", 1);
-    break;
+  case 3:
+    llvm_unreachable("NOP data length should be a multiple of 4 bytes");
   }
 
   return true;
