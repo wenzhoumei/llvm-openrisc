@@ -26,12 +26,12 @@ namespace llvm {
 class MCObjectTargetWriter;
 class OpenRiscMCAsmBackend : public MCAsmBackend {
   uint8_t OSABI;
-  bool isBigEndian;
+  bool isLittleEndian;
 
 public:
   OpenRiscMCAsmBackend(uint8_t osABI, bool isLE)
       : MCAsmBackend(llvm::endianness::big), OSABI(osABI),
-        isBigEndian(isLE) {}
+        isLittleEndian(isLE) {}
 
   unsigned getNumFixupKinds() const override {
     return OpenRisc::NumTargetFixupKinds;
@@ -49,7 +49,7 @@ public:
                     const MCSubtargetInfo *STI) const override;
 
   std::unique_ptr<MCObjectTargetWriter> createObjectTargetWriter() const override {
-    return createOpenRiscObjectWriter(OSABI, isBigEndian);
+    return createOpenRiscObjectWriter(OSABI, isLittleEndian);
   }
 };
 } // namespace llvm
@@ -177,9 +177,7 @@ bool OpenRiscMCAsmBackend::writeNopData(raw_ostream &OS, uint64_t Count,
   uint64_t NumNops = Count / 4;
 
   for (uint64_t i = 0; i != NumNops; ++i) {
-    // Currently just big-endian machine supported,
-    // but probably big-endian will be also implemented in future
-    if (isBigEndian) {
+    if (!isLittleEndian) {
       OS.write("\x15", 1);
       OS.write("\x00", 1);
       OS.write("\x00", 1);

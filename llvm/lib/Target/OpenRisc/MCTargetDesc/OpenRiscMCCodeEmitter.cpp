@@ -34,11 +34,11 @@ namespace {
 class OpenRiscMCCodeEmitter : public MCCodeEmitter {
   const MCInstrInfo &MCII;
   MCContext &Ctx;
-  bool isBigEndian;
+  bool isLittleEndian;
 
 public:
   OpenRiscMCCodeEmitter(const MCInstrInfo &mcii, MCContext &ctx, bool isLE)
-      : MCII(mcii), Ctx(ctx), isBigEndian(isLE) {}
+      : MCII(mcii), Ctx(ctx), isLittleEndian(isLE) {}
 
   ~OpenRiscMCCodeEmitter() {}
 
@@ -105,7 +105,7 @@ void OpenRiscMCCodeEmitter::encodeInstruction(const MCInst &MI,
   uint64_t Bits = getBinaryCodeForInstr(MI, Fixups, STI);
   unsigned Size = MCII.get(MI.getOpcode()).getSize();
 
-  if (isBigEndian) {
+  if (!isLittleEndian) {
     // Big-endian insertion of Size bytes.
     for (unsigned I = 0; I != Size; ++I) {
       unsigned ShiftValue = 8 * (Size - 1 - I);
