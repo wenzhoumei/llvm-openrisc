@@ -241,8 +241,6 @@ def SYS : F14_InstWrapper<0x2000, "l.sys", []>;
 // Calls
 //===----------------------------------------------------------------------===//
 def : Pat<(OpenRisc_ret), (JR R9)>;
-
-
 def : Pat<(OpenRisc_call tglobaladdr:$imm), (JAL $imm)>;
 def : Pat<(OpenRisc_call texternalsym:$imm), (JAL $imm)>;
 
@@ -262,11 +260,12 @@ def ADJCALLSTACKUP   : Pseudo_Inst<(outs), (ins i32imm:$ra, i32imm:$rb),
 //===----------------------------------------------------------------------===//
 // XFORM
 //===----------------------------------------------------------------------===//
+// Get high 16 bits of a 32 bit immediate
 def imm16_hi_XFORM : SDNodeXForm<imm, [{
   return CurDAG->getTargetConstant((int)N->getSExtValue() & (~0xFFFF), SDLoc(N), MVT::i32);
 }]>;
 
-
+// Get low 16 bits of a 32 bit immediate
 def imm16_lo_XFORM : SDNodeXForm<imm, [{
   return CurDAG->getTargetConstant((int)N->getSExtValue() & 0xFFFF, SDLoc(N), MVT::i32);
 }]>;
@@ -287,25 +286,23 @@ def : Pat<(imm32:$imm), (ORI (MOVHI (imm16_hi_XFORM imm32:$imm)), (imm16_lo_XFOR
 //===----------------------------------------------------------------------===//
 // Other branch patterns
 //===----------------------------------------------------------------------===//
-// Conditional (brcc) branches
-multiclass BrccPat<CondCode cc, F9_InstWrapper INST> {
-  def : Pat<(brcc cc, GPR:$ra, GPR:$rb, bb:$imm),
-            (BF (INST GPR:$ra, GPR:$rb), bb:$imm)>;
-}
+class BrccPat<CondCode cc, F9_InstWrapper INST> 
+    : Pat<(brcc cc, GPR:$ra, GPR:$rb, bb:$imm),
+          (BF (INST GPR:$ra, GPR:$rb), bb:$imm)>;
 
-defm : BrccPat<SETEQ, SFEQ>;
-defm : BrccPat<SETNE, SFNE>;
-defm : BrccPat<SETUGT, SFGTU>;
-defm : BrccPat<SETUGE, SFGEU>;
-defm : BrccPat<SETULT, SFLTU>;
-defm : BrccPat<SETULE, SFLEU>;
-defm : BrccPat<SETGT, SFGTS>;
-defm : BrccPat<SETGE, SFGES>;
-defm : BrccPat<SETLT, SFLTS>;
-defm : BrccPat<SETLE, SFLES>;
+def : BrccPat<SETEQ, SFEQ>;
+def : BrccPat<SETNE, SFNE>;
+def : BrccPat<SETUGT, SFGTU>;
+def : BrccPat<SETUGE, SFGEU>;
+def : BrccPat<SETULT, SFLTU>;
+def : BrccPat<SETULE, SFLEU>;
+def : BrccPat<SETGT, SFGTS>;
+def : BrccPat<SETGE, SFGES>;
+def : BrccPat<SETLT, SFLTS>;
+def : BrccPat<SETLE, SFLES>;
 
 //===----------------------------------------------------------------------===//
-// Other
+// Pseudo instruction for ISD::SELECT_CC
 //===----------------------------------------------------------------------===//
 let usesCustomInserter = 1 in {
 def SELECT_CC
