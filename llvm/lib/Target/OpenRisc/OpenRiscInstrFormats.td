@@ -14,7 +14,6 @@ class OpenRisc_Inst<dag outs, dag ins, string asmStr, list<dag> pattern,
   field bits<32> Inst;
 
   let Namespace = "OpenRisc";
-  let DecoderNamespace = "OpenRisc";
 
   let Size = 4;
   

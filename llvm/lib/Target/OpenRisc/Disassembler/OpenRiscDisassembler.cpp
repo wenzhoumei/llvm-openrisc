@@ -41,6 +41,10 @@ public:
   DecodeStatus getInstruction(MCInst &Instr, uint64_t &Size,
                               ArrayRef<uint8_t> Bytes, uint64_t Address,
                               raw_ostream &CStream) const override;
+private:
+  DecodeStatus getInstruction32(MCInst &Instr, uint64_t &Size,
+                                ArrayRef<uint8_t> Bytes, uint64_t Address,
+                                raw_ostream &CStream) const;
 };
 } // end anonymous namespace
 
@@ -48,6 +52,15 @@ static MCDisassembler *createOpenRiscDisassembler(const Target &T,
                                                 const MCSubtargetInfo &STI,
                                                 MCContext &Ctx) {
   return new OpenRiscDisassembler(STI, Ctx, true);
+}
+
+static bool tryAddingSymbolicOperand(int64_t Value, bool isBranch,
+                                     uint64_t Address, uint64_t Offset,
+                                     uint64_t InstSize, MCInst &MI,
+                                     const void *Decoder) {
+  const MCDisassembler *Dis = static_cast<const MCDisassembler *>(Decoder);
+  return Dis->tryAddingSymbolicOperand(MI, Value, Address, isBranch, Offset, /*OpSize=*/0,
+                                       InstSize);
 }
 
 extern "C" LLVM_EXTERNAL_VISIBILITY void LLVMInitializeOpenRiscDisassembler() {
@@ -67,24 +80,90 @@ static const unsigned GPRDecoderTable[] = {
 static DecodeStatus DecodeGPRRegisterClass(MCInst &Inst, uint64_t RegNo,
                                           uint64_t Address,
                                           const void *Decoder) {
-  return MCDisassembler::Fail;
-}
-static DecodeStatus decodeMemRegOperand(MCInst &Inst, uint64_t Imm,
-                                       int64_t Address, const void *Decoder) {
-  return MCDisassembler::Fail;
+  if (RegNo >= std::size(GPRDecoderTable))
+    return MCDisassembler::Fail;
+
+  unsigned Reg = GPRDecoderTable[RegNo];
+  Inst.addOperand(MCOperand::createReg(Reg));
+
+  return MCDisassembler::Success;
 }
 
-static DecodeStatus decodePlaceholder(MCInst &Inst, uint64_t Imm,
+static DecodeStatus decodeSImm16(MCInst &Inst, uint64_t Imm,
                                       int64_t Address, const void *Decoder) {
-  return MCDisassembler::Fail;
+  assert(isInt<16>(Imm) && "Invalid immediate");
+  Inst.addOperand(MCOperand::createImm(SignExtend64<16>(Imm)));
+  return MCDisassembler::Success;
 }
 
+static DecodeStatus decodeUImm5(MCInst &Inst, uint64_t Imm,
+                                      int64_t Address, const void *Decoder) {
+  assert(isUInt<5>(Imm) && "Invalid immediate");
+  Inst.addOperand(MCOperand::createImm(Imm));
+  return MCDisassembler::Success;
+}
+
+static DecodeStatus decodeUImm16(MCInst &Inst, uint64_t Imm,
+                                      int64_t Address, const void *Decoder) {
+  assert(isUInt<16>(Imm) && "Invalid immediate");
+  Inst.addOperand(MCOperand::createImm(Imm));
+  return MCDisassembler::Success;
+}
+
+static DecodeStatus decodeImm16(MCInst &Inst, uint64_t Imm,
+                                      int64_t Address, const void *Decoder) {
+  assert(isUInt<16>(Imm) && "Invalid immediate");
+  Inst.addOperand(MCOperand::createImm(Imm));
+  return MCDisassembler::Success;
+}
+
+static DecodeStatus decodeImm32(MCInst &Inst, uint64_t Imm,
+                                      int64_t Address, const void *Decoder) {
+  assert(isUInt<32>(Imm) && "Invalid immediate");
+  Inst.addOperand(MCOperand::createImm(Imm));
+  return MCDisassembler::Success;
+}
+
+static DecodeStatus decodeImm16High(MCInst &Inst, uint64_t Imm,
+                                      int64_t Address, const void *Decoder) {
+  assert(isUInt<16>(Imm) && "Invalid immediate");
+  Inst.addOperand(MCOperand::createImm(Imm));
+  return MCDisassembler::Success;
+}
+
+static DecodeStatus decodeBranchOperand(MCInst &Inst, uint64_t Imm,
+                                        int64_t Address, const void *Decoder) {
+  assert(isUInt<26>(Imm) && "Invalid immediate");
+  Inst.addOperand(MCOperand::createImm(SignExtend64<26>(Imm << 2)));
+  return MCDisassembler::Success;
+}
+
+static DecodeStatus decodeCallOperand(MCInst &Inst, uint64_t Imm,
+                                      int64_t Address, const void *Decoder) {
+  assert(isUInt<26>(Imm) && "Invalid immediate");
+  Inst.addOperand(MCOperand::createImm(SignExtend64<26>(Imm << 2)));
+  return MCDisassembler::Success;
+}
 
 #include "OpenRiscGenDisassemblerTables.inc"
+
+DecodeStatus OpenRiscDisassembler::getInstruction32(MCInst &MI, uint64_t &Size,
+                                                 ArrayRef<uint8_t> Bytes,
+                                                 uint64_t Address,
+                                                 raw_ostream &CS) const {
+  if (Bytes.size() < 4) {
+    Size = 0;
+    return MCDisassembler::Fail;
+  }
+  Size = 4;
+
+  uint32_t Insn =  support::endian::read32le(Bytes.data());
+  return decodeInstruction(DecoderTable32, MI, Insn, Address, this, STI);
+}
 
 DecodeStatus OpenRiscDisassembler::getInstruction(MCInst &MI, uint64_t &Size,
                                                 ArrayRef<uint8_t> Bytes,
                                                 uint64_t Address,
                                                 raw_ostream &CS) const {
-  return MCDisassembler::Fail;
+  return getInstruction32(MI, Size, Bytes, Address, CS);
 }

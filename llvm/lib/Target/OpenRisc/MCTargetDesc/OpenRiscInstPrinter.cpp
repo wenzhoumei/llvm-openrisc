@@ -83,13 +83,6 @@ void OpenRiscInstPrinter::printOperand(const MCInst *MI, int OpNum,
   printOperand(MI->getOperand(OpNum), O);
 }
 
-void OpenRiscInstPrinter::printMemOperand(const MCInst *MI, int OpNum,
-                                        raw_ostream &OS) {
-  OS << getRegisterName(MI->getOperand(OpNum).getReg());
-  OS << ", ";
-  printOperand(MI, OpNum + 1, OS);
-}
-
 void OpenRiscInstPrinter::printBranchTarget(const MCInst *MI, int OpNum,
                                           raw_ostream &OS) {
   const MCOperand &MC = MI->getOperand(OpNum);
@@ -120,7 +113,7 @@ void OpenRiscInstPrinter::printCallOperand(const MCInst *MI, int OpNum,
     llvm_unreachable("Invalid operand");
 }
 
-void OpenRiscInstPrinter::printImm16High_AsmOperand(const MCInst *MI, int OpNum,
+void OpenRiscInstPrinter::printImm16High(const MCInst *MI, int OpNum,
                                                    raw_ostream &O) {
   const MCOperand &MC = MI->getOperand(OpNum);
 
@@ -136,7 +129,7 @@ void OpenRiscInstPrinter::printImm16High_AsmOperand(const MCInst *MI, int OpNum,
     printOperand(MI, OpNum, O);
 }
 
-void OpenRiscInstPrinter::printSImm16_AsmOperand(const MCInst *MI, int OpNum,
+void OpenRiscInstPrinter::printSImm16(const MCInst *MI, int OpNum,
                                               raw_ostream &O) {
   const MCOperand &MC = MI->getOperand(OpNum);
 
@@ -152,7 +145,7 @@ void OpenRiscInstPrinter::printSImm16_AsmOperand(const MCInst *MI, int OpNum,
     printOperand(MI, OpNum, O);
 }
 
-void OpenRiscInstPrinter::printImm32_AsmOperand(const MCInst *MI, int OpNum,
+void OpenRiscInstPrinter::printImm32(const MCInst *MI, int OpNum,
                                               raw_ostream &O) {
   const MCOperand &MC = MI->getOperand(OpNum);
 
@@ -166,7 +159,7 @@ void OpenRiscInstPrinter::printImm32_AsmOperand(const MCInst *MI, int OpNum,
     printOperand(MI, OpNum, O);
 }
 
-void OpenRiscInstPrinter::printImm16_AsmOperand(const MCInst *MI, int OpNum,
+void OpenRiscInstPrinter::printImm16(const MCInst *MI, int OpNum,
                                               raw_ostream &O) {
   const MCOperand &MC = MI->getOperand(OpNum);
 
@@ -182,7 +175,7 @@ void OpenRiscInstPrinter::printImm16_AsmOperand(const MCInst *MI, int OpNum,
     printOperand(MI, OpNum, O);
 }
 
-void OpenRiscInstPrinter::printUImm16_AsmOperand(const MCInst *MI, int OpNum,
+void OpenRiscInstPrinter::printUImm16(const MCInst *MI, int OpNum,
                                               raw_ostream &O) {
   const MCOperand &MC = MI->getOperand(OpNum);
 
@@ -198,7 +191,7 @@ void OpenRiscInstPrinter::printUImm16_AsmOperand(const MCInst *MI, int OpNum,
     printOperand(MI, OpNum, O);
 }
 
-void OpenRiscInstPrinter::printUImm5_AsmOperand(const MCInst *MI, int OpNum,
+void OpenRiscInstPrinter::printUImm5(const MCInst *MI, int OpNum,
                                               raw_ostream &O) {
   const MCOperand &MC = MI->getOperand(OpNum);
 
