@@ -134,7 +134,10 @@ static DecodeStatus decodeImm16High(MCInst &Inst, uint64_t Imm,
 static DecodeStatus decodeBranchOperand(MCInst &Inst, uint64_t Imm,
                                         int64_t Address, const void *Decoder) {
   assert(isUInt<26>(Imm) && "Invalid immediate");
-  Inst.addOperand(MCOperand::createImm(SignExtend64<26>(Imm << 2)));
+  if (!tryAddingSymbolicOperand(SignExtend64<8>(Imm) + 4 + Address, true,
+                              Address, 0, 3, Inst, Decoder))
+  Inst.addOperand(MCOperand::createImm(SignExtend64<8>(Imm)));
+
   return MCDisassembler::Success;
 }
 
@@ -157,7 +160,7 @@ DecodeStatus OpenRiscDisassembler::getInstruction32(MCInst &MI, uint64_t &Size,
   }
   Size = 4;
 
-  uint32_t Insn =  support::endian::read32le(Bytes.data());
+  uint32_t Insn =  support::endian::read32be(Bytes.data());
   return decodeInstruction(DecoderTable32, MI, Insn, Address, this, STI);
 }
 

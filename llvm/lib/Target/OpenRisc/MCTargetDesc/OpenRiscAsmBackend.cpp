@@ -30,7 +30,7 @@ class OpenRiscMCAsmBackend : public MCAsmBackend {
 
 public:
   OpenRiscMCAsmBackend(uint8_t osABI, bool isLE)
-      : MCAsmBackend(llvm::endianness::little), OSABI(osABI),
+      : MCAsmBackend(llvm::endianness::big), OSABI(osABI),
         isBigEndian(isLE) {}
 
   unsigned getNumFixupKinds() const override {
@@ -185,7 +185,10 @@ bool OpenRiscMCAsmBackend::writeNopData(raw_ostream &OS, uint64_t Count,
       OS.write("\x00", 1);
       OS.write("\x00", 1);
     } else {
-      report_fatal_error("Little-endian mode currently is not supported!");
+      OS.write("\x00", 1);
+      OS.write("\x00", 1);
+      OS.write("\x00", 1);
+      OS.write("\x15", 1);
     }
     Count -= 4;
   }
