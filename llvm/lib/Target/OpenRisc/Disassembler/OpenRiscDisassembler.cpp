@@ -25,7 +25,7 @@
 
 using namespace llvm;
 
-#define DEBUG_TYPE "OpenRisc-disassembler"
+#define DEBUG_TYPE "openrisc-disassembler"
 
 using DecodeStatus = MCDisassembler::DecodeStatus;
 
