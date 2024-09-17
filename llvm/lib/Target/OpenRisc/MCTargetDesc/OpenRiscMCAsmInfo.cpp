@@ -21,7 +21,7 @@ OpenRiscMCAsmInfo::OpenRiscMCAsmInfo(const Triple &TT) {
   CodePointerSize = 4;
   CalleeSaveStackSlotSize = 4;
   PrivateGlobalPrefix = ".L";
-  CommentString = ";";
+  CommentString = "#";
   ZeroDirective = "\t.space\t";
   Data64bitsDirective = "\t.quad\t";
   GlobalDirective = "\t.global\t";
