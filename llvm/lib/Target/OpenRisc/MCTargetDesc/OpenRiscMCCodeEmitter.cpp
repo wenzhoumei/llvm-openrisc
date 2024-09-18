@@ -67,27 +67,27 @@ private:
                            SmallVectorImpl<MCFixup> &Fixups,
                            const MCSubtargetInfo &STI) const;
   
-  uint32_t getSImm16OpValue(const MCInst &MI, unsigned OpNo,
+  uint32_t getSImm16OpValue(const MCInst &MI, unsigned OpNum,
                               SmallVectorImpl<MCFixup> &Fixups,
                               const MCSubtargetInfo &STI) const;
 
-  uint32_t getUImm5OpValue(const MCInst &MI, unsigned OpNo,
+  uint32_t getUImm5OpValue(const MCInst &MI, unsigned OpNum,
                             SmallVectorImpl<MCFixup> &Fixups,
                             const MCSubtargetInfo &STI) const;
     
-  uint32_t getUImm16OpValue(const MCInst &MI, unsigned OpNo,
+  uint32_t getUImm16OpValue(const MCInst &MI, unsigned OpNum,
                               SmallVectorImpl<MCFixup> &Fixups,
                               const MCSubtargetInfo &STI) const;
 
-  uint32_t getImm16OpValue(const MCInst &MI, unsigned OpNo,
+  uint32_t getImm16OpValue(const MCInst &MI, unsigned OpNum,
                             SmallVectorImpl<MCFixup> &Fixups,
                             const MCSubtargetInfo &STI) const;
   
-  uint32_t getImm32OpValue(const MCInst &MI, unsigned OpNo,
+  uint32_t getImm32OpValue(const MCInst &MI, unsigned OpNum,
                               SmallVectorImpl<MCFixup> &Fixups,
                               const MCSubtargetInfo &STI) const;
 
-  uint32_t getImm16HighOpValue(const MCInst &MI, unsigned OpNo,
+  uint32_t getImm16HighOpValue(const MCInst &MI, unsigned OpNum,
                             SmallVectorImpl<MCFixup> &Fixups,
                             const MCSubtargetInfo &STI) const;
 };
@@ -95,7 +95,7 @@ private:
 
 MCCodeEmitter *llvm::createOpenRiscMCCodeEmitter(const MCInstrInfo &MCII,
                                                MCContext &Ctx) {
-  return new OpenRiscMCCodeEmitter(MCII, Ctx, true);
+  return new OpenRiscMCCodeEmitter(MCII, Ctx, false);
 }
 
 void OpenRiscMCCodeEmitter::encodeInstruction(const MCInst &MI,
@@ -112,7 +112,7 @@ void OpenRiscMCCodeEmitter::encodeInstruction(const MCInst &MI,
       CB.push_back(char(Bits >> ShiftValue));
     }
   } else {
-    report_fatal_error("Little-endian mode currently is not supported!");
+    llvm_unreachable("Little-endian mode currently is not supported!");
   }
 }
 
@@ -127,7 +127,7 @@ OpenRiscMCCodeEmitter::getMachineOpValue(const MCInst &MI, const MCOperand &MO,
     return Res;
   }
 
-  report_fatal_error("Unhandled expression!");
+  llvm_unreachable("Unhandled expression!");
   return 0;
 }
 
@@ -155,6 +155,7 @@ OpenRiscMCCodeEmitter::getCallEncoding(const MCInst &MI, unsigned int OpNum,
     int32_t Res = MO.getImm();
     if (Res & 0x3) {
       llvm_unreachable("Unexpected operand value!");
+  return 0;;
     }
     Res >>= 2;
     return Res;
@@ -168,57 +169,75 @@ OpenRiscMCCodeEmitter::getCallEncoding(const MCInst &MI, unsigned int OpNum,
 }
 
 uint32_t
-OpenRiscMCCodeEmitter::getSImm16OpValue(const MCInst &MI, unsigned OpNo,
+OpenRiscMCCodeEmitter::getSImm16OpValue(const MCInst &MI, unsigned OpNum,
                             SmallVectorImpl<MCFixup> &Fixups,
                             const MCSubtargetInfo &STI) const {
-  const MCOperand &MO = MI.getOperand(OpNo);
-  uint32_t Res = static_cast<uint32_t>(MO.getImm());
-  return Res;
+  const MCOperand &MO = MI.getOperand(OpNum);
+
+  if (MO.isImm())
+    return MO.getImm();
+  
+  llvm_unreachable("Unexpected operand value!");
 }
 
 uint32_t
-OpenRiscMCCodeEmitter::getUImm5OpValue(const MCInst &MI, unsigned OpNo,
+OpenRiscMCCodeEmitter::getUImm5OpValue(const MCInst &MI, unsigned OpNum,
                           SmallVectorImpl<MCFixup> &Fixups,
                           const MCSubtargetInfo &STI) const {
-  const MCOperand &MO = MI.getOperand(OpNo);
-  uint32_t Res = static_cast<uint32_t>(MO.getImm());
-  return Res;
+  const MCOperand &MO = MI.getOperand(OpNum);
+
+  if (MO.isImm())
+    return static_cast<uint32_t>(MO.getImm());
+  
+  llvm_unreachable("Unexpected operand value!");
 }
   
 uint32_t
-OpenRiscMCCodeEmitter::getUImm16OpValue(const MCInst &MI, unsigned OpNo,
+OpenRiscMCCodeEmitter::getUImm16OpValue(const MCInst &MI, unsigned OpNum,
                             SmallVectorImpl<MCFixup> &Fixups,
                             const MCSubtargetInfo &STI) const {
-  const MCOperand &MO = MI.getOperand(OpNo);
-  uint32_t Res = static_cast<uint32_t>(MO.getImm());
-  return Res;
+  const MCOperand &MO = MI.getOperand(OpNum);
+
+  if (MO.isImm())
+    return static_cast<uint32_t>(MO.getImm());
+  
+  llvm_unreachable("Unexpected operand value!");
 }
 
 uint32_t
-OpenRiscMCCodeEmitter::getImm16OpValue(const MCInst &MI, unsigned OpNo,
+OpenRiscMCCodeEmitter::getImm16OpValue(const MCInst &MI, unsigned OpNum,
                           SmallVectorImpl<MCFixup> &Fixups,
                           const MCSubtargetInfo &STI) const {
-  const MCOperand &MO = MI.getOperand(OpNo);
-  uint32_t Res = static_cast<uint32_t>(MO.getImm());
-  return Res;
+  const MCOperand &MO = MI.getOperand(OpNum);
+
+  if (MO.isImm())
+    return MO.getImm();
+  
+  llvm_unreachable("Unexpected operand value!");
 }
 
 uint32_t
-OpenRiscMCCodeEmitter::getImm32OpValue(const MCInst &MI, unsigned OpNo,
+OpenRiscMCCodeEmitter::getImm32OpValue(const MCInst &MI, unsigned OpNum,
                             SmallVectorImpl<MCFixup> &Fixups,
                             const MCSubtargetInfo &STI) const {
-  const MCOperand &MO = MI.getOperand(OpNo);
-  uint32_t Res = static_cast<uint32_t>(MO.getImm());
-  return Res;
+  const MCOperand &MO = MI.getOperand(OpNum);
+
+  if (MO.isImm())
+    return MO.getImm();
+  
+  llvm_unreachable("Unexpected operand value!");
 }
                             
 uint32_t
-OpenRiscMCCodeEmitter::getImm16HighOpValue(const MCInst &MI, unsigned OpNo,
+OpenRiscMCCodeEmitter::getImm16HighOpValue(const MCInst &MI, unsigned OpNum,
                           SmallVectorImpl<MCFixup> &Fixups,
                           const MCSubtargetInfo &STI) const {
-  const MCOperand &MO = MI.getOperand(OpNo);
-  uint32_t Res = static_cast<uint32_t>(MO.getImm());
-  return Res;
+  const MCOperand &MO = MI.getOperand(OpNum);
+
+  if (MO.isImm())
+    return MO.getImm();
+  
+  llvm_unreachable("Unexpected operand value!");
 }
 
 #include "OpenRiscGenMCCodeEmitter.inc"
