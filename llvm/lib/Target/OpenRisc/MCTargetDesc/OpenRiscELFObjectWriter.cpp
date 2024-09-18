@@ -11,6 +11,7 @@
 #include "MCTargetDesc/OpenRiscMCTargetDesc.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/BinaryFormat/ELF.h"
+#include "llvm/MC/MCContext.h"
 #include "llvm/MC/MCELFObjectWriter.h"
 #include "llvm/MC/MCExpr.h"
 #include "llvm/MC/MCFixup.h"
@@ -49,9 +50,10 @@ unsigned OpenRiscObjectWriter::getRelocType(MCContext &Ctx, const MCValue &Targe
 
   switch ((unsigned)Fixup.getKind()) {
   case FK_Data_4:
-    return ELF::R_OPENRISC_32;
+    return ELF::R_OR1K_32;
   default:
-    return ELF::R_OPENRISC_SLOT0_OP;
+    Ctx.reportError(Fixup.getLoc(), "unsupported relocation type");
+    return ELF::R_OR1K_NONE;
   }
 }
 

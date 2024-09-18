@@ -206,7 +206,9 @@ OpenRiscMCCodeEmitter::getUImm16OpValue(const MCInst &MI, unsigned OpNum,
   if (MO.isImm())
     return static_cast<uint32_t>(MO.getImm());
   
-  llvm_unreachable("Unexpected operand value!");
+  assert(MO.isExpr() && "Unexpected operand value!");
+
+  return getExprOpValue(MO.getExpr(), Fixups, STI);
 }
 
 uint32_t
@@ -236,7 +238,7 @@ OpenRiscMCCodeEmitter::getImm32OpValue(const MCInst &MI, unsigned OpNum,
 unsigned OpenRiscMCCodeEmitter::getExprOpValue(const MCExpr *Expr,
                                           SmallVectorImpl<MCFixup> &Fixups,
                                           const MCSubtargetInfo &STI) const {
-
+  /*
   MCExpr::ExprKind Kind = Expr->getKind();
 
   if (Kind == MCExpr::Binary) {
@@ -244,7 +246,6 @@ unsigned OpenRiscMCCodeEmitter::getExprOpValue(const MCExpr *Expr,
     Kind = Expr->getKind();
   }
 
-  /*
   if (Kind == MCExpr::Target) {
     OpenRiscMCExpr const *OpenRiscExpr = cast<OpenRiscMCExpr>(Expr);
     int64_t Result;
@@ -256,9 +257,10 @@ unsigned OpenRiscMCCodeEmitter::getExprOpValue(const MCExpr *Expr,
     Fixups.push_back(MCFixup::create(0, OpenRiscExpr, FixupKind));
     return 0;
   }
-  */
 
   assert(Kind == MCExpr::SymbolRef);
+  */
+
   return 0;
 }
 
@@ -271,8 +273,7 @@ OpenRiscMCCodeEmitter::getImm16HighOpValue(const MCInst &MI, unsigned OpNum,
   if (MO.isImm())
     return MO.getImm();
   
-  // MO must be an Expr.
-  assert(MO.isExpr());
+  assert(MO.isExpr() && "Unexpected operand value!");
 
   return getExprOpValue(MO.getExpr(), Fixups, STI);
 }
