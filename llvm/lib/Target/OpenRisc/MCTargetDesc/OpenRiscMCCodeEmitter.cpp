@@ -21,6 +21,7 @@
 #include "llvm/MC/MCInst.h"
 #include "llvm/MC/MCInstrInfo.h"
 #include "llvm/MC/MCRegisterInfo.h"
+#include "llvm/Support/Casting.h"
 
 #define GET_INSTRMAP_INFO
 #include "OpenRiscGenInstrInfo.inc"
@@ -52,6 +53,10 @@ private:
   uint64_t getBinaryCodeForInstr(const MCInst &MI,
                                  SmallVectorImpl<MCFixup> &Fixups,
                                  const MCSubtargetInfo &STI) const;
+
+  uint32_t getExprOpValue(const MCExpr *Expr,
+                          SmallVectorImpl<MCFixup> &Fixups,
+                          const MCSubtargetInfo &STI) const;
 
   // Called by the TableGen code to get the binary encoding of operand
   // MO in MI.  Fixups is the list of fixups against MI.
@@ -227,7 +232,36 @@ OpenRiscMCCodeEmitter::getImm32OpValue(const MCInst &MI, unsigned OpNum,
   
   llvm_unreachable("Unexpected operand value!");
 }
-                            
+
+unsigned OpenRiscMCCodeEmitter::getExprOpValue(const MCExpr *Expr,
+                                          SmallVectorImpl<MCFixup> &Fixups,
+                                          const MCSubtargetInfo &STI) const {
+
+  MCExpr::ExprKind Kind = Expr->getKind();
+
+  if (Kind == MCExpr::Binary) {
+    Expr = static_cast<const MCBinaryExpr *>(Expr)->getLHS();
+    Kind = Expr->getKind();
+  }
+
+  /*
+  if (Kind == MCExpr::Target) {
+    OpenRiscMCExpr const *OpenRiscExpr = cast<OpenRiscMCExpr>(Expr);
+    int64_t Result;
+    if (OpenRiscExpr->evaluateAsConstant(Result)) {
+      return Result;
+    }
+
+    MCFixupKind FixupKind = static_cast<MCFixupKind>(OpenRiscExpr->getFixupKind());
+    Fixups.push_back(MCFixup::create(0, OpenRiscExpr, FixupKind));
+    return 0;
+  }
+  */
+
+  assert(Kind == MCExpr::SymbolRef);
+  return 0;
+}
+
 uint32_t
 OpenRiscMCCodeEmitter::getImm16HighOpValue(const MCInst &MI, unsigned OpNum,
                           SmallVectorImpl<MCFixup> &Fixups,
@@ -237,7 +271,10 @@ OpenRiscMCCodeEmitter::getImm16HighOpValue(const MCInst &MI, unsigned OpNum,
   if (MO.isImm())
     return MO.getImm();
   
-  llvm_unreachable("Unexpected operand value!");
+  // MO must be an Expr.
+  assert(MO.isExpr());
+
+  return getExprOpValue(MO.getExpr(), Fixups, STI);
 }
 
 #include "OpenRiscGenMCCodeEmitter.inc"
