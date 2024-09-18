@@ -183,10 +183,7 @@ bool OpenRiscMCAsmBackend::writeNopData(raw_ostream &OS, uint64_t Count,
       OS.write("\x00", 1);
       OS.write("\x00", 1);
     } else {
-      OS.write("\x00", 1);
-      OS.write("\x00", 1);
-      OS.write("\x00", 1);
-      OS.write("\x15", 1);
+      report_fatal_error("Little-endian mode currently is not supported!");
     }
     Count -= 4;
   }

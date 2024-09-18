@@ -33,7 +33,10 @@ public:
     PtrDiffType = SignedInt;
     IntPtrType = SignedInt;
     UseZeroLengthBitfieldAlignment = true;
-    resetDataLayout("e-m:e-p:32:32-i8:8-i16:16-i64:32:64-f32:32-f64:32:64-n32");
+    BigEndian = true;
+
+    resetDataLayout(BigEndian ? "E-m:e-p:32:32-i8:8-i16:16-i64:32:64-f32:32-f64:32:64-n32"
+                              : "e-m:e-p:32:32-i8:8-i16:16-i64:32:64-f32:32-f64:32:64-n32");
   }
 
   void getTargetDefines(const LangOptions &Opts,

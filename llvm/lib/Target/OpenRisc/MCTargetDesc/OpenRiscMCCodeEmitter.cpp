@@ -112,12 +112,7 @@ void OpenRiscMCCodeEmitter::encodeInstruction(const MCInst &MI,
       CB.push_back(char(Bits >> ShiftValue));
     }
   } else {
-    // Little-endian insertion of Size bytes.
-    unsigned ShiftValue = 0;
-    for (unsigned I = 0; I != Size; ++I) {
-      CB.push_back(char(Bits >> ShiftValue));
-      ShiftValue += 8;
-    }
+    report_fatal_error("Little-endian mode currently is not supported!");
   }
 }
 
