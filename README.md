@@ -13,7 +13,7 @@ This project provides a backend for the OpenRISC architecture.
 ### Steps to Compile
 1. Clone the LLVM project and this backend:
    ```
-   git clone https://github.com/llvm/llvm-project.git
+   git clone https://github.com/wenzhoumei/llvm-openrisc.git
    cd llvm-project
    ```
 
