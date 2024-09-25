@@ -14,7 +14,7 @@ This project provides a backend for the OpenRISC architecture.
 1. Clone the LLVM project and this backend:
    ```
    git clone https://github.com/wenzhoumei/llvm-openrisc.git
-   cd llvm-project
+   cd llvm-openrisc
    ```
 
 2. Create a build directory:
