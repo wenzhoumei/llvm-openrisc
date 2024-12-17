@@ -1070,6 +1070,24 @@ enum {
 #include "ELFRelocs/Xtensa.def"
 };
 
+// OR1K specific e_flags
+enum : unsigned {
+  EF_OR1K_HAS_RELOC  = 0x01,
+  EF_OR1K_EXEC_P     = 0x02,
+  EF_OR1K_HAS_LINENO = 0x04,
+  EF_OR1K_HAS_DEBUG  = 0x08,
+  EF_OR1K_HAS_SYMS   = 0x10,
+  EF_OR1K_HAS_LOCALS = 0x20,
+  EF_OR1K_DYNAMIC    = 0x40,
+  EF_OR1K_WP_TEXT    = 0x80,
+  EF_OR1K_D_PAGED    = 0x100,
+};
+
+// ELF Relocation types for OR1K
+enum {
+#include "ELFRelocs/OR1K.def"
+};
+
 #undef ELF_RELOC
 
 // Section header.
