@@ -55,6 +55,7 @@ StringRef Triple::getArchTypeName(ArchType Kind) {
   case msp430:         return "msp430";
   case nvptx64:        return "nvptx64";
   case nvptx:          return "nvptx";
+  case or1k:           return "or1k";
   case ppc64:          return "powerpc64";
   case ppc64le:        return "powerpc64le";
   case ppc:            return "powerpc";
@@ -249,6 +250,7 @@ StringRef Triple::getArchTypePrefix(ArchType Kind) {
   case dxil:        return "dx";
 
   case xtensa:      return "xtensa";
+  case or1k:        return "or1k";
   }
 }
 
@@ -491,6 +493,7 @@ Triple::ArchType Triple::getArchTypeForLLVMName(StringRef Name) {
     .Case("loongarch64", loongarch64)
     .Case("dxil", dxil)
     .Case("xtensa", xtensa)
+    .Case("or1k", or1k)
     .Default(UnknownArch);
 }
 
@@ -637,6 +640,7 @@ static Triple::ArchType parseArch(StringRef ArchName) {
                  "dxilv1.4", "dxilv1.5", "dxilv1.6", "dxilv1.7", "dxilv1.8",
                  Triple::dxil)
           .Case("xtensa", Triple::xtensa)
+          .Case("or1k", Triple::or1k)
           .Default(Triple::UnknownArch);
 
   // Some architectures require special parsing logic just to compute the
@@ -961,6 +965,7 @@ static Triple::ObjectFormatType getDefaultFormat(const Triple &T) {
   case Triple::msp430:
   case Triple::nvptx64:
   case Triple::nvptx:
+  case Triple::or1k:
   case Triple::ppc64le:
   case Triple::ppcle:
   case Triple::r600:
@@ -1685,6 +1690,7 @@ unsigned Triple::getArchPointerBitWidth(llvm::Triple::ArchType Arch) {
   case llvm::Triple::mips:
   case llvm::Triple::mipsel:
   case llvm::Triple::nvptx:
+  case llvm::Triple::or1k:
   case llvm::Triple::ppc:
   case llvm::Triple::ppcle:
   case llvm::Triple::r600:
@@ -1793,6 +1799,7 @@ Triple Triple::get32BitArchVariant() const {
   case Triple::mips:
   case Triple::mipsel:
   case Triple::nvptx:
+  case Triple::or1k:
   case Triple::ppc:
   case Triple::ppcle:
   case Triple::r600:
@@ -1855,6 +1862,7 @@ Triple Triple::get64BitArchVariant() const {
   case Triple::lanai:
   case Triple::m68k:
   case Triple::msp430:
+  case Triple::or1k:
   case Triple::r600:
   case Triple::shave:
   case Triple::sparcel:
@@ -1977,6 +1985,7 @@ Triple Triple::getBigEndianArchVariant() const {
   case Triple::mipsel:
     T.setArch(Triple::mips, getSubArch());
     break;
+  case Triple::or1k:    T.setArch(Triple::or1k);       break;
   case Triple::ppcle:   T.setArch(Triple::ppc);        break;
   case Triple::ppc64le: T.setArch(Triple::ppc64);      break;
   case Triple::sparcel: T.setArch(Triple::sparc);      break;
@@ -1998,6 +2007,7 @@ Triple Triple::getLittleEndianArchVariant() const {
   case Triple::sparcv9:
   case Triple::systemz:
   case Triple::m68k:
+  case Triple::or1k:
 
   // ARM is intentionally unsupported here, changing the architecture would
   // drop any arch suffixes.

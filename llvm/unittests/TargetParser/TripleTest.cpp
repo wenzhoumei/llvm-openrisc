@@ -1290,6 +1290,18 @@ TEST(TripleTest, ParsedIDs) {
   EXPECT_EQ(Triple::UnknownOS, T.getOS());
   EXPECT_EQ(Triple::UnknownEnvironment, T.getEnvironment());
 
+  T = Triple("or1k");
+  EXPECT_EQ(Triple::or1k, T.getArch());
+  EXPECT_EQ(Triple::UnknownVendor, T.getVendor());
+  EXPECT_EQ(Triple::UnknownOS, T.getOS());
+  EXPECT_EQ(Triple::UnknownEnvironment, T.getEnvironment());
+
+  T = Triple("or1k-unknown-unknown");
+  EXPECT_EQ(Triple::or1k, T.getArch());
+  EXPECT_EQ(Triple::UnknownVendor, T.getVendor());
+  EXPECT_EQ(Triple::UnknownOS, T.getOS());
+  EXPECT_EQ(Triple::UnknownEnvironment, T.getEnvironment());
+
   T = Triple("arm-unknown-linux-ohos");
   EXPECT_EQ(Triple::arm, T.getArch());
   EXPECT_EQ(Triple::UnknownVendor, T.getVendor());
@@ -1889,6 +1901,11 @@ TEST(TripleTest, BitWidthChecks) {
   EXPECT_FALSE(T.isArch16Bit());
   EXPECT_TRUE(T.isArch32Bit());
   EXPECT_FALSE(T.isArch64Bit());
+
+  T.setArch(Triple::or1k);
+  EXPECT_FALSE(T.isArch16Bit());
+  EXPECT_TRUE(T.isArch32Bit());
+  EXPECT_FALSE(T.isArch64Bit());
 }
 
 TEST(TripleTest, BitWidthArchVariants) {
@@ -1931,6 +1948,10 @@ TEST(TripleTest, BitWidthArchVariants) {
   T.setArch(Triple::nvptx);
   EXPECT_EQ(Triple::nvptx, T.get32BitArchVariant().getArch());
   EXPECT_EQ(Triple::nvptx64, T.get64BitArchVariant().getArch());
+
+  T.setArch(Triple::or1k);
+  EXPECT_EQ(Triple::or1k, T.get32BitArchVariant().getArch());
+  EXPECT_EQ(Triple::UnknownArch, T.get64BitArchVariant().getArch());
 
   T.setArch(Triple::sparc);
   EXPECT_EQ(Triple::sparc, T.get32BitArchVariant().getArch());
@@ -2091,6 +2112,10 @@ TEST(TripleTest, BitWidthArchVariants) {
   T.setArch(Triple::xtensa);
   EXPECT_EQ(Triple::xtensa, T.get32BitArchVariant().getArch());
   EXPECT_EQ(Triple::UnknownArch, T.get64BitArchVariant().getArch());
+
+  T.setArch(Triple::or1k);
+  EXPECT_EQ(Triple::or1k, T.get32BitArchVariant().getArch());
+  EXPECT_EQ(Triple::UnknownArch, T.get64BitArchVariant().getArch());
 }
 
 TEST(TripleTest, EndianArchVariants) {
@@ -2185,6 +2210,10 @@ TEST(TripleTest, EndianArchVariants) {
   EXPECT_EQ(Triple::mipsel, T.getLittleEndianArchVariant().getArch());
   EXPECT_EQ(Triple::MipsSubArch_r6,
             T.getLittleEndianArchVariant().getSubArch());
+
+  T.setArch(Triple::or1k);
+  EXPECT_EQ(Triple::or1k, T.getBigEndianArchVariant().getArch());
+  EXPECT_EQ(Triple::UnknownArch, T.getLittleEndianArchVariant().getArch());
 
   T.setArch(Triple::ppc);
   EXPECT_EQ(Triple::ppc, T.getBigEndianArchVariant().getArch());
