@@ -2,6 +2,7 @@ add_llvm_component_group(OR1K)
 
 set(LLVM_TARGET_DEFINITIONS OR1K.td)
 
+tablegen(LLVM OR1KGenMCCodeEmitter.inc -gen-emitter)
 tablegen(LLVM OR1KGenInstrInfo.inc -gen-instr-info)
 tablegen(LLVM OR1KGenRegisterInfo.inc -gen-register-info)
 
