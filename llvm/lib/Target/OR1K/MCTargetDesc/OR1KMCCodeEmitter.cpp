@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "MCTargetDesc/OR1KMCTargetDesc.h"
+#include "MCTargetDesc/OR1KFixupKinds.h"
 #include "llvm/MC/MCCodeEmitter.h"
 #include "llvm/MC/MCContext.h"
 #include "llvm/MC/MCExpr.h"
@@ -50,17 +51,9 @@ private:
 
   /// Return binary encoding of operand. If the machine operand requires
   /// relocation, record the relocation and return zero.
-  uint64_t getMachineOpValue(const MCInst &MI, const MCOperand &MO,
+  uint32_t getMachineOpValue(const MCInst &MI, const MCOperand &MO,
                              SmallVectorImpl<MCFixup> &Fixups,
                              const MCSubtargetInfo &STI) const;
-
-  uint32_t getBranchEncoding(const MCInst &MI, unsigned OpNum,
-                           SmallVectorImpl<MCFixup> &Fixups,
-                           const MCSubtargetInfo &STI) const;
-
-  uint32_t getCallEncoding(const MCInst &MI, unsigned OpNum,
-                           SmallVectorImpl<MCFixup> &Fixups,
-                           const MCSubtargetInfo &STI) const;
 
   uint32_t getImmOpValue(const MCInst &MI, unsigned OpNum,
                          SmallVectorImpl<MCFixup> &Fixups,
@@ -73,6 +66,16 @@ MCCodeEmitter *llvm::createOR1KMCCodeEmitter(const MCInstrInfo &MCII,
   return new OR1KMCCodeEmitter(MCII, Ctx, true);
 }
 
+static void addFixup(SmallVectorImpl<MCFixup> &Fixups, uint32_t Offset,
+                     const MCExpr *Value, uint16_t Kind) {
+  bool PCRel = false;
+  switch (Kind) {
+  case OR1K::fixup_or1k_branch:
+    PCRel = true;
+  }
+  Fixups.push_back(MCFixup::create(Offset, Value, Kind, PCRel));
+}
+
 void OR1KMCCodeEmitter::encodeInstruction(const MCInst &MI,
                                          SmallVectorImpl<char> &CB,
                                          SmallVectorImpl<MCFixup> &Fixups,
@@ -82,12 +85,12 @@ void OR1KMCCodeEmitter::encodeInstruction(const MCInst &MI,
       uint32_t Binary = getBinaryCodeForInstr(MI, Fixups, STI);
       support::endian::write(CB, Binary, llvm::endianness::big);
     } else {
-      report_fatal_error("Little-endian mode is not supported!");
+      llvm_unreachable("Little-endian mode is not supported!");
     }
 }
 
-uint64_t
-RISCVMCCodeEmitter::getMachineOpValue(const MCInst &MI, const MCOperand &MO,
+uint32_t
+OR1KMCCodeEmitter::getMachineOpValue(const MCInst &MI, const MCOperand &MO,
                                       SmallVectorImpl<MCFixup> &Fixups,
                                       const MCSubtargetInfo &STI) const {
 
@@ -102,20 +105,6 @@ RISCVMCCodeEmitter::getMachineOpValue(const MCInst &MI, const MCOperand &MO,
 }
 
 uint32_t
-OR1KMCCodeEmitter::getBranchTargetEncoding(const MCInst &MI, unsigned int OpNum,
-                                           SmallVectorImpl<MCFixup> &Fixups,
-                                           const MCSubtargetInfo &STI) const {
-  return 0;
-}
-
-uint32_t
-OR1KMCCodeEmitter::getCallEncoding(const MCInst &MI, unsigned int OpNum,
-                                     SmallVectorImpl<MCFixup> &Fixups,
-                                     const MCSubtargetInfo &STI) const {
-  return 0;
-}
-
-uint32_t
 OR1KMCCodeEmitter::getImmOpValue(const MCInst &MI, unsigned OpNum,
                                  SmallVectorImpl<MCFixup> &Fixups,
                                  const MCSubtargetInfo &STI) const {
@@ -124,7 +113,33 @@ OR1KMCCodeEmitter::getImmOpValue(const MCInst &MI, unsigned OpNum,
   if (MO.isImm())
     return MO.getImm();
 
-  llvm_unreachable("Unexpected operand value!");
+  assert(MO.isExpr() && "Unexpected operand value!");
+
+  const MCExpr *Expr = MO.getExpr();
+  unsigned FixupKind = OR1K::fixup_or1k_invalid;
+
+  switch (MI.getOpcode()) {
+  default:
+    llvm_unreachable("Unexpected opcode needing fixup");
+
+  case OR1K::J:
+  case OR1K::JAL:
+  case OR1K::BF:
+  case OR1K::BNF:
+    FixupKind = OR1K::fixup_or1k_branch;
+    break;
+
+  case OR1K::MOVHI:
+    FixupKind = OR1K::fixup_or1k_hi16;
+    break;
+  case OR1K::ORI:
+    FixupKind = OR1K::fixup_or1k_lo16;
+    break;
+  }
+
+  assert(FixupKind != OR1K::fixup_or1k_invalid && "Unhandled expression!");
+
+  addFixup(Fixups, 0, Expr, FixupKind);
 }
 
 #include "OR1KGenMCCodeEmitter.inc"
