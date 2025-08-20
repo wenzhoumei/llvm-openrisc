@@ -254,8 +254,11 @@ class BRANCH_I_Inst<bits<6> opcode, string opcodeAsm, list<dag> pattern,
 def J   : BRANCH_I_Inst<0x0, "l.j", [(br bb:$imm)], (ins simm25:$imm)>;
 def JAL : BRANCH_I_Inst<0x1, "l.jal", [(or1k_call simm25:$imm)],
                         (ins simm25:$imm)>;
+
+let Uses = [SR_F] in {
 def BNF : BRANCH_I_Inst<0x3, "l.bnf", [], (ins FFlag:$ff, simm25:$imm)>;
 def BF  : BRANCH_I_Inst<0x4, "l.bf", [], (ins FFlag:$ff, simm25:$imm)>;
+} // Uses = [SR_F]
 
 //===----------------------------------------------------------------------===//
 // LOAD
@@ -319,6 +322,8 @@ class SETFLAG_Inst<bits<11> opcode, string opcodeAsm>
   let Inst{20-16} = ra;
   let Inst{15-11} = rb;
   let Inst{10-0}  = reserved;
+
+  let Defs = [SR_F];
 }
 
 def SFEQ  : SETFLAG_Inst<0x720, "l.sfeq">;

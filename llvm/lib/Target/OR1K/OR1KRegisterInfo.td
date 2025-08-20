@@ -74,56 +74,11 @@ def R29 : GPRReg<29, "r29">, DwarfRegNum<[29]>;
 def R31 : GPRReg<31, "r31">, DwarfRegNum<[31]>;
 
 //===----------------------------------------------------------------------===//
-// Special-purpose registers
+// Flags
 //===----------------------------------------------------------------------===//
 
-class SPR<bits<5> group, bits<11> num, string n> : OR1KReg<n> {
-  let HWEncoding{10-0} = num;
-  let HWEncoding{15-11} = group;
-}
-
-def VRReg: SPR<0, 0, "VR">;     // Version register
-def UPRReg: SPR<0, 1, "UPR">;   // Unit Present register
-def CPUCFGRReg: SPR<0, 2, "CPUCFGR">;  // CPU Configuration register
-def DMMUCFGRReg: SPR<0, 3, "DMMUCFGR">;  // Data MMU Configuration register
-def IMMUCFGRReg: SPR<0, 4, "IMMUCFGR">;  // Instruction MMU Configuration register
-def DCCFGRReg: SPR<0, 5, "DCCFGR">;  // Data Cache Configuration register
-def ICCFGRReg: SPR<0, 6, "ICCFGR">;  // Instruction Cache Configuration register
-def DCFGRReg: SPR<0, 7, "DCFGR">;  // Debug Configuration register
-def PCCFGRReg: SPR<0, 8, "PCCFGR">;  // Performance Counters Configuration register
-def VR2Reg : SPR<0, 9, "VR2">;   // Version register 2
-def AVRReg: SPR<0, 10, "AVR">;  // Architecture version register
-def EVBARReg: SPR<0, 11, "EVBAR">;  // Exception vector base address register
-def AECRReg: SPR<0, 12, "AECR">;  // Arithmetic Exception Control Register
-def AESRReg: SPR<0, 13, "AESR">;  // Arithmetic Exception Status Register
-def NPCReg : SPR<0, 16, "NPC">;  // Next PC register
-def SRReg : SPR<0, 17, "SR">;    // Supervision register
-def PPCReg : SPR<0, 18, "PPC">;  // Previous PC register
-def FPCSRReg: SPR<0, 20, "FPCSR">;  // FP Control Status register
-
-foreach i = 0-15 in {
-  def EPCRReg#i : SPR<0, !add(32,i), "EPCR"#i>;
-  def EEARReg#i : SPR<0, !add(48,i), "EEAR"#i>;
-  def ESRReg#i : SPR<0, !add(64,i), "ESR"#i>;
-}
-
-foreach i = 0-7 in {
-  def ISRReg#i : SPR<0, !add(21,i), "ISR"#i>;
-}
-
-def COREIDReg : SPR<0, 128, "COREID">;   // Core Identifier Register
-def NUMCORESReg : SPR<0, 129, "NUMCORES">;   // Number of Cores Register
-
-foreach i = 0-511 in {
-  def GPR_SPRReg#i : SPR<0, !add(1024,i), "GPR_SPR"#i>;
-}
-
-//===----------------------------------------------------------------------===//
-// Pseudo registers (for use in codegen only)
-//===----------------------------------------------------------------------===//
-
-// Flag for supervision register
-def FFlagPReg : OR1KReg<"FFlag">;
+// Flags are modelled as registers to not create false dependencies.
+def SR_FFlag : OR1KReg<"FFlag">;
 
 //===----------------------------------------------------------------------===//
 // Register classes
@@ -135,19 +90,4 @@ def GPR : RegisterClass<"OR1K", [i32], 32, (add
   R26, R28, R30, R15, R17, R19, R21, R23,
   R25, R27, R29, R31, R1, R2, R0)>;
 
-def FFlag : RegisterClass<"OR1K", [i1], 32, (add FFlagPReg)>;
-
-def EPCR : RegisterClass<"OR1K", [i32], 32,
-  (add (sequence "EPCRReg%u", 0, 15))>;
-
-def EEAR : RegisterClass<"OR1K", [i32], 32,
-  (add (sequence "EEARReg%u", 0, 15))>;
-
-def ESR : RegisterClass<"OR1K", [i32], 32,
-  (add (sequence "ESRReg%u", 0, 15))>;
-
-def ISR : RegisterClass<"OR1K", [i32], 32,
-  (add (sequence "ISRReg%u", 0, 7))>;
-
-def GPR_SPR : RegisterClass<"OR1K", [i32], 32,
-  (add (sequence "GPR_SPRReg%u", 0, 511))>;
+def SR_F : RegisterClass<"OR1K", [i1], 32, (add SR_FFlag)>;
