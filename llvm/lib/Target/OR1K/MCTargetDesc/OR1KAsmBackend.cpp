@@ -9,6 +9,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "MCTargetDesc/OR1KMCTargetDesc.h"
+#include "MCTargetDesc/OR1KFixupKinds.h"
 #include "llvm/ADT/bit.h"
 #include "llvm/MC/MCAsmBackend.h"
 #include "llvm/MC/MCAssembler.h"
@@ -25,11 +26,14 @@ using namespace llvm;
 
 namespace llvm {
 class MCObjectTargetWriter;
+
 class OR1KAsmBackend : public MCAsmBackend {
 public:
   OR1KAsmBackend(uint8_t OSABI, bool IsLittleEndian)
       : MCAsmBackend(llvm::endianness::big), OSABI(OSABI),
         IsLittleEndian(IsLittleEndian) {}
+
+  MCFixupKindInfo getFixupKindInfo(MCFixupKind Kind) const override;
 
   void applyFixup(const MCFragment &, const MCFixup &, const MCValue &Target,
                   MutableArrayRef<char> Data, uint64_t Value,
@@ -54,10 +58,70 @@ private:
 };
 } // namespace llvm
 
+MCFixupKindInfo OR1KAsmBackend::getFixupKindInfo(MCFixupKind Kind) const {
+  const static MCFixupKindInfo Infos[] = {
+    // name                  offset bits flags
+    {"fixup_or1k_branch",      0,    26, 0}, // 26-bit PC-relative for J/branches
+    {"fixup_or1k_hi16",       16,    16, 0}, // high 16 bits for MOVHI
+    {"fixup_or1k_lo16",        0,    16, 0}, // low 16 bits for ORI
+  };
+
+  if (Kind < FirstTargetFixupKind)
+    return MCAsmBackend::getFixupKindInfo(Kind);
+
+  assert(unsigned(Kind - FirstTargetFixupKind) < OR1K::NumTargetFixupKinds &&
+         "Invalid kind!");
+
+  return Infos[Kind - FirstTargetFixupKind];
+}
+
+static uint64_t adjustFixupValue(const MCFixup &Fixup, uint64_t Value,
+                                 MCContext &Ctx) {
+  unsigned Kind = Fixup.getKind();
+
+  switch (Kind) {
+  default:
+    llvm_unreachable("Unknown OR1K fixup kind!");
+
+  case FK_Data_1:
+  case FK_Data_2:
+  case FK_Data_4:
+  case FK_Data_8:
+    return Value;
+
+  case OR1K::fixup_or1k_branch:
+    Value -= 4;
+    if (!isInt<26>(Value))
+      Ctx.reportError(Fixup.getLoc(), "Branch fixup value out of range!");
+    return Value & 0x03ffffff;
+
+  case OR1K::fixup_or1k_hi16:
+    return Value & 0xffff0000;
+
+  case OR1K::fixup_or1k_lo16:
+    return Value & 0xffff;
+  }
+}
+
 void OR1KAsmBackend::applyFixup(const MCFragment &F, const MCFixup &Fixup,
-                                  const MCValue &Target,
-                                  MutableArrayRef<char> Data, uint64_t Value,
-                                  bool IsResolved) {}
+                                const MCValue &Target,
+                                MutableArrayRef<char> Data, uint64_t Value,
+                                bool IsResolved) {
+    maybeAddReloc(F, Fixup, Target, Value, IsResolved);
+    MCContext &Ctx = getContext();
+    MCFixupKindInfo Info = getFixupKindInfo(Fixup.getKind());
+
+    Value = adjustFixupValue(Fixup, Value, Ctx);
+
+    // Shift the value into the correct bit position in the instruction.
+    Value <<= Info.TargetOffset;
+
+    unsigned Offset = Fixup.getOffset();
+
+    // Apply mask to each byte of instruction.
+    for (unsigned i = 0; i < 4; ++i)
+        Data[Offset + i] |= uint8_t((Value >> (i * 8)) & 0xff);
+}
 
 bool OR1KAsmBackend::writeNopData(raw_ostream &OS, uint64_t Count,
                                     const MCSubtargetInfo *STI) const {
