@@ -74,17 +74,12 @@ class SImmLeafOp<int bitsNum> :
 def simm16 : SImmLeafOp<16>
 def uimm5 : UImmLeafOp<5>
 def uimm16 : UImmLeafOp<16>
-def simm25 : SImmLeafOp<25>
+def simm25_branch : SImmLeafOp<25> {
+  let PrintMethod = "printBranchOperand"
+}
 def uimm16hi : UImmOp<16>, ImmLeaf<i32, "return (Imm & 0xFFFF) == 0;"> {
   let ParserMatchClass = ImmAsmOperand<"U", 16, "Hi">;
-}
-
-// Symbolic
-def PCRelTargetAsmOperand : AsmOperandClass {
-  let Name = "PCRelTarget";
-  let ParserMethod = "parsePCRelTarget";
-  let PredicateMethod = "isImm";
-  let RenderMethod = "addImmOperands";
+  let PrintMethod = "printUImm16High"
 }
 
 // Displacement
@@ -251,13 +246,13 @@ class BRANCH_I_Inst<bits<6> opcode, string opcodeAsm, list<dag> pattern,
   let isTerminator = 1;
 }
 
-def J   : BRANCH_I_Inst<0x0, "l.j", [(br bb:$imm)], (ins simm25:$imm)>;
-def JAL : BRANCH_I_Inst<0x1, "l.jal", [(or1k_call simm25:$imm)],
-                        (ins simm25:$imm)>;
+def J   : BRANCH_I_Inst<0x0, "l.j", [(br bb:$imm)], (ins simm25_branch:$imm)>;
+def JAL : BRANCH_I_Inst<0x1, "l.jal", [(or1k_call simm25_branch:$imm)],
+                        (ins simm25_branch:$imm)>;
 
 let Uses = [SR_F] in {
-def BNF : BRANCH_I_Inst<0x3, "l.bnf", [], (ins FFlag:$ff, simm25:$imm)>;
-def BF  : BRANCH_I_Inst<0x4, "l.bf", [], (ins FFlag:$ff, simm25:$imm)>;
+def BNF : BRANCH_I_Inst<0x3, "l.bnf", [], (ins FFlag:$ff, simm25_branch:$imm)>;
+def BF  : BRANCH_I_Inst<0x4, "l.bf", [], (ins FFlag:$ff, simm25_branch:$imm)>;
 } // Uses = [SR_F]
 
 //===----------------------------------------------------------------------===//

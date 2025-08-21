@@ -8,6 +8,7 @@
 
 #include "OR1KMCTargetDesc.h"
 #include "OR1KMCAsmInfo.h"
+#include "OR1KInstPrinter.h"
 #include "TargetInfo/OR1KTargetInfo.h"
 #include "llvm/MC/MCAsmInfo.h"
 #include "llvm/MC/MCInstrInfo.h"
@@ -36,12 +37,19 @@ static MCInstrInfo *createOR1KMCInstrInfo() {
   return X;
 }
 
+static MCInstPrinter *createOR1KMCInstPrinter(const Triple &TT,
+                                                unsigned SyntaxVariant,
+                                                const MCAsmInfo &MAI,
+                                                const MCInstrInfo &MII,
+                                                const MCRegisterInfo &MRI) {
+  return new OR1KInstPrinter(MAI, MII, MRI);
+}
+
 static MCRegisterInfo *createOR1KMCRegisterInfo(const Triple &TT) {
   MCRegisterInfo *X = new MCRegisterInfo();
   InitOR1KMCRegisterInfo(X, OR1K::R1);
   return X;
 }
-
 
 extern "C" LLVM_EXTERNAL_VISIBILITY void LLVMInitializeOR1KTargetMC() {
   // Register the MCAsmInfo.
@@ -53,6 +61,10 @@ extern "C" LLVM_EXTERNAL_VISIBILITY void LLVMInitializeOR1KTargetMC() {
 
   // Register the MCInstrInfo.
   TargetRegistry::RegisterMCInstrInfo(getTheOR1KTarget(), createOR1KMCInstrInfo);
+
+  // Register the MCInstPrinter.
+  TargetRegistry::RegisterMCInstPrinter(getTheOR1KTarget(),
+                                        createOR1KMCInstPrinter);
 
   // Register the MCRegisterInfo.
   TargetRegistry::RegisterMCRegInfo(getTheOR1KTarget(),
