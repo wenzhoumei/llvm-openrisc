@@ -90,13 +90,13 @@ static uint64_t adjustFixupValue(const MCFixup &Fixup, uint64_t Value,
     return Value;
 
   case OR1K::fixup_or1k_branch:
-    Value -= 4;
-    if (!isInt<26>(Value))
-      Ctx.reportError(Fixup.getLoc(), "Branch fixup value out of range!");
-    return Value & 0x03ffffff;
+      if (!isInt<26>(Value >> 2))
+        Ctx.reportError(Fixup.getLoc(), "fixup value out of range");
+
+      return (Value >> 2) & 0x03ffffff;
 
   case OR1K::fixup_or1k_hi16:
-    return Value & 0xffff0000;
+    return (Value >> 16) & 0xffff;
 
   case OR1K::fixup_or1k_lo16:
     return Value & 0xffff;
