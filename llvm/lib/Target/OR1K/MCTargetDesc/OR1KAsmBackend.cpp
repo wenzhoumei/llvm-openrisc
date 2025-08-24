@@ -142,5 +142,5 @@ MCAsmBackend *llvm::createOR1KAsmBackend(const Target &T,
                                              const MCTargetOptions &Options) {
   uint8_t OSABI =
       MCELFObjectTargetWriter::getOSABI(STI.getTargetTriple().getOS());
-  return new llvm::OR1KAsmBackend(OSABI, true);
+  return new llvm::OR1KAsmBackend(OSABI, false);
 }

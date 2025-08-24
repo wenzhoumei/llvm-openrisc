@@ -63,7 +63,7 @@ private:
 
 MCCodeEmitter *llvm::createOR1KMCCodeEmitter(const MCInstrInfo &MCII,
                                                MCContext &Ctx) {
-  return new OR1KMCCodeEmitter(MCII, Ctx, true);
+  return new OR1KMCCodeEmitter(MCII, Ctx, false);
 }
 
 static void addFixup(SmallVectorImpl<MCFixup> &Fixups, uint32_t Offset,
@@ -140,6 +140,8 @@ OR1KMCCodeEmitter::getImmOpValue(const MCInst &MI, unsigned OpNum,
   assert(FixupKind != OR1K::fixup_or1k_invalid && "Unhandled expression!");
 
   addFixup(Fixups, 0, Expr, FixupKind);
+
+  return 0;
 }
 
 #include "OR1KGenMCCodeEmitter.inc"
