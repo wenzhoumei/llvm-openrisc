@@ -60,10 +60,10 @@ private:
 
 MCFixupKindInfo OR1KAsmBackend::getFixupKindInfo(MCFixupKind Kind) const {
   const static MCFixupKindInfo Infos[] = {
-    // name                  offset bits flags
-    {"fixup_or1k_branch",      0,    26, 0}, // 26-bit PC-relative for J/branches
-    {"fixup_or1k_hi16",       16,    16, 0}, // high 16 bits for MOVHI
-    {"fixup_or1k_lo16",        0,    16, 0}, // low 16 bits for ORI
+    // name                    offset  bits flags
+    {"fixup_or1k_branch",      0,      26,  0},
+    {"fixup_or1k_hi16",        0,      16,  0},
+    {"fixup_or1k_lo16",        0,      16,  0},
   };
 
   if (Kind < FirstTargetFixupKind)
@@ -90,9 +90,6 @@ static uint64_t adjustFixupValue(const MCFixup &Fixup, uint64_t Value,
     return Value;
 
   case OR1K::fixup_or1k_branch:
-      if (!isInt<26>(Value >> 2))
-        Ctx.reportError(Fixup.getLoc(), "fixup value out of range");
-
       return (Value >> 2) & 0x03ffffff;
 
   case OR1K::fixup_or1k_hi16:
@@ -119,8 +116,9 @@ void OR1KAsmBackend::applyFixup(const MCFragment &F, const MCFixup &Fixup,
     unsigned Offset = Fixup.getOffset();
 
     // Apply mask to each byte of instruction.
-    for (unsigned i = 0; i < 4; ++i)
-        Data[Offset + i] |= uint8_t((Value >> (i * 8)) & 0xff);
+    for (unsigned i = 0; i != 4; ++i) {
+      Data[Offset + 3 - i] |= uint8_t((Value >> (i * 8)) & 0xff);
+    }
 }
 
 bool OR1KAsmBackend::writeNopData(raw_ostream &OS, uint64_t Count,
