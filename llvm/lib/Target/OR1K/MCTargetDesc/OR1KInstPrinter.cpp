@@ -14,6 +14,7 @@
 
 #include "OR1KInstPrinter.h"
 #include "llvm/CodeGen/MachineOperand.h"
+#include "llvm/MC/MCAsmInfo.h"
 #include "llvm/MC/MCExpr.h"
 #include "llvm/MC/MCInstrInfo.h"
 #include "llvm/MC/MCRegister.h"
@@ -56,25 +57,22 @@ void OR1KInstPrinter::printOperand(const MCInst *MI, int OpNo,
   MAI.printExpr(O, *MO.getExpr());
 }
 
-void OR1KInstPrinter::printBranchOperand(const MCInst *MI, int OpNo,
-                                         raw_ostream &O) {
+void OR1KInstPrinter::printCallOperand(const MCInst *MI, int OpNo, raw_ostream &O) {
   const MCOperand &MO = MI->getOperand(OpNo);
-  if (!MO.isImm())
-    return printOperand(MI, OpNo, STI, O);
-
-  markup(O, Markup::Target) << formatHex(Target);
+  if (MO.isExpr()) {
+    markup(O, Markup::Target);
+    MAI.printExpr(O, *MO.getExpr());
+    return;
+  }
+  printOperand(MI, OpNo, O);
 }
 
-void OR1KInstPrinter::printImm16High(const MCInst *MI, int OpNo,
-                                     raw_ostream &O) {
+void OR1KInstPrinter::printBranchTarget(const MCInst *MI, int OpNo, raw_ostream &O) {
   const MCOperand &MO = MI->getOperand(OpNo);
-
   if (MO.isExpr()) {
-    O << "hi(";
-    printOperand(MI, OpNo, O);
-    O << ")";
-    return
+    markup(O, Markup::Target);
+    MAI.printExpr(O, *MO.getExpr());
+    return;
   }
-
-  printOperand(MI, OpNo, O);
+  markup(O, Markup::Target) << formatImm(MO.getImm());
 }

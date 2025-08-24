@@ -5,6 +5,7 @@ set(LLVM_TARGET_DEFINITIONS OR1K.td)
 tablegen(LLVM OR1KGenMCCodeEmitter.inc -gen-emitter)
 tablegen(LLVM OR1KGenInstrInfo.inc -gen-instr-info)
 tablegen(LLVM OR1KGenRegisterInfo.inc -gen-register-info)
+tablegen(LLVM OR1KGenAsmWriter.inc -gen-asm-writer)
 
 add_public_tablegen_target(OR1KCommonTableGen)
 

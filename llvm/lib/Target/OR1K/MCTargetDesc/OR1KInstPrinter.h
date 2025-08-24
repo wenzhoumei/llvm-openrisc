@@ -43,10 +43,9 @@ public:
 
 private:
   // Print various types of operand.
-  void printOperand(const MCInst *MI, int OpNum, raw_ostream &O);
-
-  void printBranchTarget(const MCInst *MI, int OpNum, raw_ostream &O);
-  void printImm16High(const MCInst *MI, int OpNum, raw_ostream &O);
+  void printOperand(const MCInst *MI, int OpNo, raw_ostream &O);
+  void printCallOperand(const MCInst *MI, int OpNo, raw_ostream &O);
+  void printBranchTarget(const MCInst *MI, int OpNo, raw_ostream &O);
 };
 } // end namespace llvm
 

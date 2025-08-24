@@ -4,6 +4,7 @@ add_llvm_component_library(LLVMOR1KDesc
   OR1KMCAsmInfo.cpp
   OR1KMCCodeEmitter.cpp
   OR1KMCTargetDesc.cpp
+  OR1KInstPrinter.cpp
 
   LINK_COMPONENTS
   MC
