@@ -41,6 +41,11 @@ def OR1KInstrInfo : InstrInfo;
 // Target Declaration
 //===----------------------------------------------------------------------===//
 
+def OR1KAsmParser : AsmParser {
+  let ShouldEmitMatchRegisterAltName = 1;
+}
+
 def OR1K : Target {
   let InstructionSet = OR1KInstrInfo;
+  let AssemblyParsers = [OR1KAsmParser];
 }
