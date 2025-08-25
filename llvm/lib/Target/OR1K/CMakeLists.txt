@@ -6,11 +6,13 @@ tablegen(LLVM OR1KGenMCCodeEmitter.inc -gen-emitter)
 tablegen(LLVM OR1KGenInstrInfo.inc -gen-instr-info)
 tablegen(LLVM OR1KGenRegisterInfo.inc -gen-register-info)
 tablegen(LLVM OR1KGenAsmWriter.inc -gen-asm-writer)
+tablegen(LLVM OR1KGenSubtargetInfo.inc -gen-subtarget)
 
 add_public_tablegen_target(OR1KCommonTableGen)
 
 add_llvm_target(OR1KCodeGen
   OR1KTargetMachine.cpp
+  OR1KSubtarget.cpp
 
   LINK_COMPONENTS
   CodeGen

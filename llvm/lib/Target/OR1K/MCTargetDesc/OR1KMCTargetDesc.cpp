@@ -9,6 +9,7 @@
 #include "OR1KMCTargetDesc.h"
 #include "OR1KMCAsmInfo.h"
 #include "OR1KInstPrinter.h"
+#include "OR1KSubtarget.h"
 #include "TargetInfo/OR1KTargetInfo.h"
 #include "llvm/MC/MCAsmInfo.h"
 #include "llvm/MC/MCInstrInfo.h"
@@ -16,17 +17,21 @@
 #include "llvm/MC/MCStreamer.h"
 #include "llvm/MC/TargetRegistry.h"
 
+
 #define GET_INSTRINFO_MC_DESC
 #include "OR1KGenInstrInfo.inc"
 
 #define GET_REGINFO_MC_DESC
 #include "OR1KGenRegisterInfo.inc"
 
+#define GET_SUBTARGETINFO_MC_DESC
+#include "OR1KGenSubtargetInfo.inc"
+
 using namespace llvm;
 
 static MCAsmInfo *createOR1KMCAsmInfo(const MCRegisterInfo &MRI,
-                                        const Triple &TT,
-                                        const MCTargetOptions &Options) {
+                                      const Triple &TT,
+                                      const MCTargetOptions &Options) {
   MCAsmInfo *MAI = new OR1KMCAsmInfo(TT);
   return MAI;
 }
@@ -38,10 +43,10 @@ static MCInstrInfo *createOR1KMCInstrInfo() {
 }
 
 static MCInstPrinter *createOR1KMCInstPrinter(const Triple &TT,
-                                                unsigned SyntaxVariant,
-                                                const MCAsmInfo &MAI,
-                                                const MCInstrInfo &MII,
-                                                const MCRegisterInfo &MRI) {
+                                              unsigned SyntaxVariant,
+                                              const MCAsmInfo &MAI,
+                                              const MCInstrInfo &MII,
+                                              const MCRegisterInfo &MRI) {
   return new OR1KInstPrinter(MAI, MII, MRI);
 }
 
@@ -49,6 +54,12 @@ static MCRegisterInfo *createOR1KMCRegisterInfo(const Triple &TT) {
   MCRegisterInfo *X = new MCRegisterInfo();
   InitOR1KMCRegisterInfo(X, OR1K::R1);
   return X;
+}
+
+static MCSubtargetInfo *createOR1KMCSubtargetInfo(const Triple &TT,
+                                                    StringRef CPU,
+                                                    StringRef FS) {
+  return createOR1KMCSubtargetInfoImpl(TT, CPU, CPU, FS);
 }
 
 extern "C" LLVM_EXTERNAL_VISIBILITY void LLVMInitializeOR1KTargetMC() {
@@ -73,4 +84,8 @@ extern "C" LLVM_EXTERNAL_VISIBILITY void LLVMInitializeOR1KTargetMC() {
   // Register the MCAsmBackend.
   TargetRegistry::RegisterMCAsmBackend(getTheOR1KTarget(),
                                        createOR1KAsmBackend);
+
+  // Register the MCSubtargetInfo.
+  TargetRegistry::RegisterMCSubtargetInfo(getTheOR1KTarget(),
+                                       createOR1KMCSubtargetInfo);
 }
