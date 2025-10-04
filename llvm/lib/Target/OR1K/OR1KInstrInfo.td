@@ -109,7 +109,7 @@ def brtarget : Operand<OtherVT> {
   // let OperandType = "OPERAND_PCREL";
 }
 
-// Displacement operands
+// Memory operands
 def AddrRegImm : ComplexPattern<iPTR, 2, "selectAddrRegImm">;
 
 //===----------------------------------------------------------------------===//
