@@ -28,13 +28,12 @@ using namespace llvm;
 
 namespace {
 class OR1KMCCodeEmitter : public MCCodeEmitter {
-  const MCInstrInfo &MCII;
   MCContext &Ctx;
   bool IsLittleEndian;
 
 public:
   OR1KMCCodeEmitter(const MCInstrInfo &mcii, MCContext &ctx, bool isLE)
-      : MCII(mcii), Ctx(ctx), IsLittleEndian(isLE) {}
+      : Ctx(ctx), IsLittleEndian(isLE) {}
 
   ~OR1KMCCodeEmitter() {}
 
