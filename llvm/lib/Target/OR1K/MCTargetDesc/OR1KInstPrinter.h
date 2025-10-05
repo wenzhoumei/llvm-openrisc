@@ -44,9 +44,8 @@ public:
 private:
   // Print various types of operand.
   void printOperand(const MCInst *MI, int OpNo, raw_ostream &O);
-  void printCallOperand(const MCInst *MI, int OpNo, raw_ostream &O);
-  void printBranchTarget(const MCInst *MI, int OpNo, raw_ostream &O);
-};
+  void printPCRelOperand(const MCInst *MI, uint64_t Address,
+                         unsigned OpNo, raw_ostream &O);};
 } // end namespace llvm
 
 #endif /* LLVM_LIB_TARGET_OR1K_MCTARGETDESC_OR1KINSTPRINTER_H */

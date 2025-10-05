@@ -94,19 +94,19 @@ def PCRelAsmOperand : AsmOperandClass {
 }
 
 def calltarget : Operand<iPTR> {
-  let PrintMethod = "printCallOperand";
+  let PrintMethod = "printPCRelOperand";
   let EncoderMethod = "getImmOpValue";
-  let DecoderMethod = "decodeCallOperand";
+  let DecoderMethod = "decodePCRelOperand";
   let ParserMatchClass = PCRelAsmOperand;
-  // let OperandType = "OPERAND_PCREL";
+  let OperandType = "OPERAND_PCREL";
 }
 
 def brtarget : Operand<OtherVT> {
-  let PrintMethod = "printBranchTarget";
+  let PrintMethod = "printPCRelOperand";
   let EncoderMethod = "getImmOpValue";
-  let DecoderMethod = "decodeBranchOperand";
+  let DecoderMethod = "decodePCRelOperand";
   let ParserMatchClass = PCRelAsmOperand;
-  // let OperandType = "OPERAND_PCREL";
+  let OperandType = "OPERAND_PCREL";
 }
 
 // Memory operands

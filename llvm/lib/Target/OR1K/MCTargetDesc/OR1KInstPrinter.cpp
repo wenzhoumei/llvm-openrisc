@@ -57,22 +57,12 @@ void OR1KInstPrinter::printOperand(const MCInst *MI, int OpNo,
   MAI.printExpr(O, *MO.getExpr());
 }
 
-void OR1KInstPrinter::printCallOperand(const MCInst *MI, int OpNo, raw_ostream &O) {
-  const MCOperand &MO = MI->getOperand(OpNo);
+void OR1KInstPrinter::printPCRelOperand(const MCInst *MI, uint64_t /*Address*/,
+                                        unsigned OpNo, raw_ostream &O) {  const MCOperand &MO = MI->getOperand(OpNo);
   if (MO.isExpr()) {
     markup(O, Markup::Target);
     MAI.printExpr(O, *MO.getExpr());
     return;
   }
   printOperand(MI, OpNo, O);
-}
-
-void OR1KInstPrinter::printBranchTarget(const MCInst *MI, int OpNo, raw_ostream &O) {
-  const MCOperand &MO = MI->getOperand(OpNo);
-  if (MO.isExpr()) {
-    markup(O, Markup::Target);
-    MAI.printExpr(O, *MO.getExpr());
-    return;
-  }
-  markup(O, Markup::Target) << formatImm(MO.getImm());
 }
