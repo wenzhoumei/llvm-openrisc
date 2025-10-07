@@ -6,6 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "OR1K.h"
 #include "OR1KTargetMachine.h"
 #include "TargetInfo/OR1KTargetInfo.h"
 #include "llvm/CodeGen/Passes.h"
@@ -34,6 +35,25 @@ static Reloc::Model getEffectiveRelocModel(bool JIT,
   return RM.value_or(Reloc::Static);
 }
 
+const OR1KSubtarget *
+OR1KTargetMachine::getSubtargetImpl(const Function &F) const {
+  Attribute CPUAttr = F.getFnAttribute("target-cpu");
+  Attribute FSAttr = F.getFnAttribute("target-features");
+
+  auto CPU = CPUAttr.isValid() ? CPUAttr.getValueAsString().str() : TargetCPU;
+  auto FS = FSAttr.isValid() ? FSAttr.getValueAsString().str() : TargetFS;
+
+  auto &I = SubtargetMap[CPU + FS];
+  if (!I) {
+    // This needs to be done before we create a new subtarget since any
+    // creation will depend on the TM and the code generation flags on the
+    // function that reside in TargetOptions.
+    resetTargetOptions(F);
+    I = std::make_unique<OR1KSubtarget>(TargetTriple, CPU, FS, *this);
+  }
+  return I.get();
+}
+
 OR1KTargetMachine::OR1KTargetMachine(const Target &T, const Triple &TT,
                                          StringRef CPU, StringRef FS,
                                          const TargetOptions &Options,
@@ -49,6 +69,19 @@ OR1KTargetMachine::OR1KTargetMachine(const Target &T, const Triple &TT,
   initAsmInfo();
 }
 
+namespace {
+class OR1KPassConfig : public TargetPassConfig {
+public:
+  OR1KPassConfig(OR1KTargetMachine &TM, PassManagerBase &PM)
+      : TargetPassConfig(TM, PM) {}
+
+  bool addInstSelector() override {
+    addPass(createOR1KISelDag(getTM<OR1KTargetMachine>(), getOptLevel()));
+    return false; // false = success
+  }
+};
+} // end anonymous namespace
+
 OR1KTargetMachine::OR1KTargetMachine(const Target &T, const Triple &TT,
                                          StringRef CPU, StringRef FS,
                                          const TargetOptions &Options,
@@ -58,5 +91,5 @@ OR1KTargetMachine::OR1KTargetMachine(const Target &T, const Triple &TT,
     : OR1KTargetMachine(T, TT, CPU, FS, Options, RM, CM, OL, JIT, false) {}
 
 TargetPassConfig *OR1KTargetMachine::createPassConfig(PassManagerBase &PM) {
-  return new TargetPassConfig(*this, PM);
+  return new OR1KPassConfig(*this, PM);
 }

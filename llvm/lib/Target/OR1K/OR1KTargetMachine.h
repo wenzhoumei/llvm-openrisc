@@ -9,6 +9,7 @@
 #ifndef LLVM_LIB_TARGET_OR1K_OR1KTARGETMACHINE_H
 #define LLVM_LIB_TARGET_OR1K_OR1KTARGETMACHINE_H
 
+#include "OR1KSubtarget.h"
 #include "llvm/CodeGen/CodeGenTargetMachineImpl.h"
 #include <optional>
 
@@ -29,6 +30,8 @@ public:
                       std::optional<CodeModel::Model> CM, CodeGenOptLevel OL,
                       bool JIT);
 
+  const OR1KSubtarget *getSubtargetImpl(const Function &F) const override;
+
   TargetPassConfig *createPassConfig(PassManagerBase &PM) override;
 
   TargetLoweringObjectFile *getObjFileLowering() const override {
@@ -37,6 +40,8 @@ public:
 
 private:
   std::unique_ptr<TargetLoweringObjectFile> TLOF;
+  mutable StringMap<std::unique_ptr<OR1KSubtarget>> SubtargetMap;
+
 };
 } // end namespace llvm
 

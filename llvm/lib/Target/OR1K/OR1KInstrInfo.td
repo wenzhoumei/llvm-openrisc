@@ -470,14 +470,14 @@ def SELECT_CC
                   (ins GPR:$ra, GPR:$rb, GPR:$T, GPR:$F, i32imm:$cc),
                   "#SELECT_CC",
                   [(set GPR:$rd, (or1k_select_cc GPR:$ra, GPR:$rb, GPR:$T,
-                                  GPR:$F, i32imm:$cc))]>;
+                                  GPR:$F, (i32 imm:$cc)))]>;
 
 let isBranch = 1, isTerminator = 1 in {
 def BRCC_PSEUDO
     : Pseudo_Inst<(outs),
                   (ins GPR:$ra, GPR:$rb, i32imm:$cc, brtarget:$t),
                   "#BR_CC_PSEUDO",
-                  [(or1k_brcc i32imm:$cc, GPR:$ra, GPR:$rb, bb:$t)]>;
+                  [(or1k_brcc (i32 imm:$cc), GPR:$ra, GPR:$rb, bb:$t)]>;
 } // isBranch = 1, isTerminator = 1
 } // usesCustomInserter = 1
 

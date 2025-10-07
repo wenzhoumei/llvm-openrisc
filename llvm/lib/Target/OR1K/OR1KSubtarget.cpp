@@ -22,12 +22,21 @@
 
 using namespace llvm;
 
-OR1KSubtarget::OR1KSubtarget(const Triple &TT, StringRef CPU, StringRef FS,
-                             const OR1KTargetMachine &TM)
-    : OR1KGenSubtargetInfo(TT,
-                           CPU.empty() ? StringRef("generic") : CPU,
-                           /*TuneCPU=*/CPU.empty() ? StringRef("generic") : CPU,
-                           FS) {
-  ParseSubtargetFeatures(CPU.empty() ? StringRef("generic") : CPU,
-                         CPU.empty() ? StringRef("generic") : CPU, FS);
+OR1KSubtarget &
+OR1KSubtarget::initializeSubtargetDependencies(StringRef CPU, StringRef FS) {
+  StringRef CPUName = CPU;
+  if (CPUName.empty()) {
+    // set default cpu name
+    CPUName = "generic";
+  }
+
+  // Parse features string.
+  ParseSubtargetFeatures(CPUName, CPUName, FS);
+  return *this;
 }
+
+OR1KSubtarget::OR1KSubtarget(const Triple &TT, StringRef CPU, StringRef FS,
+                                 const TargetMachine &TM)
+    : OR1KGenSubtargetInfo(TT, CPU, /*TuneCPU=*/CPU, FS), TargetTriple(TT),
+      InstrInfo(initializeSubtargetDependencies(CPU, FS)), TLInfo(TM, *this),
+      TSInfo(), FrameLowering(*this) {}
